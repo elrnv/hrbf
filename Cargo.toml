@@ -1,0 +1,9 @@
+[package]
+name = "hrbf"
+version = "0.1.0"
+authors = ["Egor Larionov <egor.larionov@gmail.com>"]
+
+[dependencies]
+num-traits = "0.1"
+nalgebra = "*"
+lazy_static = "*"
