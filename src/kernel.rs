@@ -27,13 +27,11 @@
 //! It must be that g(x), h(x,3) -> 0 as x -> 0 for the HRBF derivatives to exist.
 
 use num_traits::{Float};
-use std::fmt::Debug;
 use std::marker::PhantomData;
-use Real;
 
 /// Kernel trait declaring all of the necessary derivatives.
-pub trait Kernel<T> : Copy + Clone + Debug + Default
-    where T: Real
+pub trait Kernel<T> : Copy + Clone + Default
+    where T: Float
 {
     /// Main kernel function φ(x)
     fn f(&self, x: T) -> T;
@@ -70,18 +68,18 @@ pub trait Kernel<T> : Copy + Clone + Debug + Default
 }
 
 /// Local kernel trait defines the radial fall-off for appropriate kernels.
-pub trait LocalKernel<T> where T: Real {
+pub trait LocalKernel<T> where T: Float {
     fn new(r: T) -> Self;
 }
 
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)]
 pub struct Pow2<T>(PhantomData<T>);
 
 /// Default constructor for `Pow2` kernel
-impl<T: Real> Default for Pow2<T> { fn default() -> Self { Pow2(PhantomData) } }
+impl<T: Float> Default for Pow2<T> { fn default() -> Self { Pow2(PhantomData) } }
 
-impl<T: Real> Kernel<T> for Pow2<T> {
+impl<T: Float> Kernel<T> for Pow2<T> {
     fn f(&self, x: T) -> T { x*x }
     fn df(&self, x: T) -> T { T::from(2.0).unwrap()*x }
     fn ddf(&self, _: T) -> T { T::from(2.0).unwrap() }
@@ -94,13 +92,13 @@ impl<T: Real> Kernel<T> for Pow2<T> {
 }
 
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)]
 pub struct Pow3<T>(::std::marker::PhantomData<T>);
 
 /// Default constructor for `Pow3` kernel
-impl<T: Real> Default for Pow3<T> { fn default() -> Self { Pow3(PhantomData) } }
+impl<T: Float> Default for Pow3<T> { fn default() -> Self { Pow3(PhantomData) } }
 
-impl<T: Real> Kernel<T> for Pow3<T> {
+impl<T: Float> Kernel<T> for Pow3<T> {
     fn f(&self, x: T) -> T { x*x*x }
     fn df(&self, x: T) -> T { T::from(3.0).unwrap()*x*x }
     fn ddf(&self, x: T) -> T { T::from(6.0).unwrap()*x }
@@ -119,13 +117,13 @@ impl<T: Real> Kernel<T> for Pow3<T> {
 }
 
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)]
 pub struct Pow4<T>(::std::marker::PhantomData<T>);
 
 /// Default constructor for `Pow4` kernel
-impl<T: Real> Default for Pow4<T> { fn default() -> Self { Pow4(PhantomData) } }
+impl<T: Float> Default for Pow4<T> { fn default() -> Self { Pow4(PhantomData) } }
 
-impl<T: Real> Kernel<T> for Pow4<T> {
+impl<T: Float> Kernel<T> for Pow4<T> {
     fn f(&self, x: T) -> T { x*x*x*x }
     fn df(&self, x: T) -> T { T::from(4.0).unwrap()*x*x*x }
     fn ddf(&self, x: T) -> T { T::from(12.0).unwrap()*x*x }
@@ -139,13 +137,13 @@ impl<T: Real> Kernel<T> for Pow4<T> {
 
 
 /// x^5 kernel.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)]
 pub struct Pow5<T>(::std::marker::PhantomData<T>);
 
 /// Default constructor for `Pow5` kernel
-impl<T: Real> Default for Pow5<T> { fn default() -> Self { Pow5(PhantomData) } }
+impl<T: Float> Default for Pow5<T> { fn default() -> Self { Pow5(PhantomData) } }
 
-impl<T: Real> Kernel<T> for Pow5<T> {
+impl<T: Float> Kernel<T> for Pow5<T> {
     fn f(&self, x: T) -> T { x*x*x*x*x }
     fn df(&self, x: T) -> T { T::from(5.0).unwrap()*x*x*x*x }
     fn ddf(&self, x: T) -> T { T::from(20.0).unwrap()*x*x*x }
@@ -159,20 +157,20 @@ impl<T: Real> Kernel<T> for Pow5<T> {
 
 
 /// Gaussian kernel.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)]
 pub struct Gauss<T> {
     r: T,
 }
 
-impl<T: Real> LocalKernel<T> for Gauss<T> {
+impl<T: Float> LocalKernel<T> for Gauss<T> {
     fn new(r: T) -> Self { Gauss { r } }
 }
 
 /// Default constructor for `Gauss` kernel
-impl<T: Real> Default for Gauss<T> { fn default() -> Self { Gauss { r: T::one() } } }
+impl<T: Float> Default for Gauss<T> { fn default() -> Self { Gauss { r: T::one() } } }
 
-impl<T: Real> Kernel<T> for Gauss<T> {
-    fn f(&self, x: T) -> T { Float::exp(-x * x / self.r) }
+impl<T: Float> Kernel<T> for Gauss<T> {
+    fn f(&self, x: T) -> T { T::exp(-x * x / self.r) }
     fn df(&self, x: T) -> T { -(T::from(2.0).unwrap()/self.r) * x * self.f(x) }
     fn ddf(&self, x: T) -> T { 
         let _2 = T::from(2.0).unwrap();
@@ -209,19 +207,19 @@ impl<T: Real> Kernel<T> for Gauss<T> {
 
 /// Quintic kernel. Generates a positive definite hrbf fitting matrix.
 /// Third and fourth order hrbf derivatives don't exist at x = 0.
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)]
 pub struct Csrbf31<T> {
     r: T,
 }
 
-impl<T: Real> LocalKernel<T> for Csrbf31<T> {
+impl<T: Float> LocalKernel<T> for Csrbf31<T> {
     fn new(r: T) -> Self { Csrbf31 { r } }
 }
 
 /// Default constructor for `Csrbf31` kernel
-impl<T: Real> Default for Csrbf31<T> { fn default() -> Self { Csrbf31 { r: T::one() } } }
+impl<T: Float> Default for Csrbf31<T> { fn default() -> Self { Csrbf31 { r: T::one() } } }
 
-impl<T: Real> Kernel<T> for Csrbf31<T> {
+impl<T: Float> Kernel<T> for Csrbf31<T> {
     fn f(&self, x: T) -> T {
         let _1 = T::one();
 		let x = x/self.r;
@@ -322,19 +320,19 @@ impl<T: Real> Kernel<T> for Csrbf31<T> {
     }
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)]
 pub struct Csrbf42<T> {
     r: T,
 }
 
-impl<T: Real> LocalKernel<T> for Csrbf42<T> {
+impl<T: Float> LocalKernel<T> for Csrbf42<T> {
     fn new(r: T) -> Self { Csrbf42 { r } }
 }
 
 /// Default constructor for `Csrbf42` kernel
-impl<T: Real> Default for Csrbf42<T> { fn default() -> Self { Csrbf42 { r: T::one() } } }
+impl<T: Float> Default for Csrbf42<T> { fn default() -> Self { Csrbf42 { r: T::one() } } }
 
-impl<T: Real> Kernel<T> for Csrbf42<T> {
+impl<T: Float> Kernel<T> for Csrbf42<T> {
     fn f(&self, x: T) -> T {
         let _1 = T::one();
 		let x = x/self.r;
