@@ -1,16 +1,16 @@
 use nalgebra::{Point3, Vector4, Vector3, Matrix3, Matrix4, Matrix3x4, U1, U3, Vector, norm};
 use nalgebra::storage::Storage;
 use num_traits::Zero;
-use kernel::Kernel;
+use kernel::{Kernel, LocalKernel};
 use Real;
 
 /// HRBF specific kernel type. In general, we can assign a unique kernel to each hrbf site, or we
-/// can use the same kernel for all points. This corresponds to Local and Global kernel types
+/// can use the same kernel for all points. This corresponds to Variable and Constant kernel types
 /// respectively.
 #[derive(Clone, Debug)]
 pub enum KernelType<K> {
-    Local(Vec<K>), // each site has its own kernel
-    Global(K), // same kernel for all sites
+    Variable(Vec<K>), // each site has its own kernel
+    Constant(K),      // same kernel for all sites
 }
 
 impl<K> ::std::ops::Index<usize> for KernelType<K> {
@@ -18,8 +18,8 @@ impl<K> ::std::ops::Index<usize> for KernelType<K> {
 
     fn index(&self, index: usize) -> &K {
         match *self {
-            KernelType::Local(ref ks) => &ks[index],
-            KernelType::Global(ref k) => k,
+            KernelType::Variable(ref ks) => &ks[index],
+            KernelType::Constant(ref k) => k,
         }
     }
 }
@@ -30,7 +30,6 @@ pub struct HRBF<T, K>
           K: Kernel<T>
 {
     sites: Vec<Point3<T>>,
-    normals: Vec<Vector3<T>>,
     betas: Vec<Vector4<T>>,
     kernel: KernelType<K>,
 }
@@ -40,7 +39,26 @@ impl<T,K> Default for HRBF<T,K>
           K: Kernel<T>
 {
     fn default() -> Self {
-        HRBF::new()
+        HRBF {
+            sites: Vec::new(),
+            betas: Vec::new(),
+            kernel: KernelType::Constant(K::default()),
+        }
+    }
+}
+
+impl<T,K> HRBF<T,K>
+    where T: Real,
+          K: Kernel<T> + LocalKernel<T>
+{
+    pub fn kernel_radius(mut self, radius: T) -> Self {
+        self.kernel = KernelType::Constant(K::new(radius));
+        self
+    }
+
+    pub fn kernel_radii(mut self, radii: Vec<T>) -> Self {
+        self.kernel = KernelType::Variable(radii.into_iter().map(|r| K::new(r)).collect());
+        self
     }
 }
 
@@ -48,13 +66,18 @@ impl<T,K> HRBF<T,K>
     where T: Real,
           K: Kernel<T>
 {
-    pub fn new() -> Self {
+    /// Main constructor. Assigns the degrees of freedom used by this HRBF in a form of 3D points
+    /// at which the kernel will be evaluated.
+    pub fn new(sites: Vec<Point3<T>>) -> Self {
         HRBF {
-            sites: Vec::new(),
-            normals: Vec::new(),
-            betas: Vec::new(),
-            kernel: KernelType::Global(K::default()),
+            sites,
+            ..HRBF::default()
         }
+    }
+
+    /// Returns the number of sites this hrbf uses to represent a surface.
+    pub fn num_sites(&self) -> usize {
+        self.sites.len()
     }
 
     /// The following are derivatives of the function
@@ -201,6 +224,23 @@ impl<T,K> HRBF<T,K>
         grad.column_mut(0).copy_from(&self.grad_phi(x,l,j));
         grad.fixed_columns_mut::<U3>(1).copy_from(&h);
         grad
+    }
+
+    /// Compute the hessian of the HRBF function.
+    pub fn hess(&self, p: Point3<T>) -> Matrix3<T> {
+        self.betas.iter()
+            .enumerate()
+            .fold(Matrix3::zero(), |sum, (j, b)| sum + self.hess_block_prod(p, b, j))
+    }
+
+    /// Helper function for computing the hessian
+    #[inline]
+    fn hess_block_prod(&self, p: Point3<T>, b: &Vector4<T>, j: usize) -> Matrix3<T> {
+        let x = p - self.sites[j];
+        let l = norm(&x);
+        let b3 = b.fixed_rows::<U3>(1);
+        let h = self.hess_phi(x, l, j);
+        h*b[0] + self.third_deriv_prod_phi(x, l, &b3, j)
     }
 
     /// Recall that the hrbf fit is done as

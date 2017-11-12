@@ -31,6 +31,7 @@ use std::fmt::Debug;
 use std::marker::PhantomData;
 use Real;
 
+/// Kernel trait declaring all of the necessary derivatives.
 pub trait Kernel<T> : Copy + Clone + Debug + Default
     where T: Real
 {
@@ -66,6 +67,11 @@ pub trait Kernel<T> : Copy + Clone + Debug + Default
     /// equivalent to dddf(x)/x - a*(ddf(x)/(x*x) - df(x)/(x*x*x)) for x != 0.
     /// This function should go to zero as x goes to zero.
     fn h(&self, x: T, a: T) -> T;
+}
+
+/// Local kernel trait defines the radial fall-off for appropriate kernels.
+pub trait LocalKernel<T> where T: Real {
+    fn new(r: T) -> Self;
 }
 
 
@@ -158,10 +164,8 @@ pub struct Gauss<T> {
     r: T,
 }
 
-impl<T: Real> Gauss<T> {
-    pub fn new(r: T) -> Self {
-        Gauss { r }
-    }
+impl<T: Real> LocalKernel<T> for Gauss<T> {
+    fn new(r: T) -> Self { Gauss { r } }
 }
 
 /// Default constructor for `Gauss` kernel
@@ -210,10 +214,8 @@ pub struct Csrbf31<T> {
     r: T,
 }
 
-impl<T: Real> Csrbf31<T> {
-    pub fn new(r: T) -> Self {
-        Csrbf31 { r }
-    }
+impl<T: Real> LocalKernel<T> for Csrbf31<T> {
+    fn new(r: T) -> Self { Csrbf31 { r } }
 }
 
 /// Default constructor for `Csrbf31` kernel
@@ -325,10 +327,8 @@ pub struct Csrbf42<T> {
     r: T,
 }
 
-impl<T: Real> Csrbf42<T> {
-    pub fn new(r: T) -> Self {
-        Csrbf42 { r }
-    }
+impl<T: Real> LocalKernel<T> for Csrbf42<T> {
+    fn new(r: T) -> Self { Csrbf42 { r } }
 }
 
 /// Default constructor for `Csrbf42` kernel
