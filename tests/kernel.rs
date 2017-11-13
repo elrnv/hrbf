@@ -10,7 +10,6 @@ mod autodiff;
 use hrbf::kernel::*;
 use autodiff::{Num, cst};
 
-const TEST_VALS: [f64;4] = [0.0, 1.0, 0.5, ::std::f64::consts::PI];
 const TEST_RADIUS: f64 = 2.0;
 
 fn test_kernel<F,K: Kernel<Num>>(ker: K, x0: f64, compare: F)
@@ -44,7 +43,9 @@ fn test_kernel<F,K: Kernel<Num>>(ker: K, x0: f64, compare: F)
 }
 
 fn test_kernel_simple<K: Kernel<Num>>(kern: K) {
-    for &x in TEST_VALS.iter() { test_kernel(kern, x, easy_compare); }
+    for &x in [0.0, 1.0, 0.5, ::std::f64::consts::PI].iter() {
+        test_kernel(kern, x, ulp_compare);
+    }
 }
 
 fn test_kernel_random<K: Kernel<Num>>(kern: K) {
@@ -56,15 +57,15 @@ fn test_kernel_random<K: Kernel<Num>>(kern: K) {
     let range = Range::new(-1.0, 1.0);
     for _ in 0..999 {
         let x = range.ind_sample(&mut rng);
-        test_kernel(kern, x, hard_compare);
+        test_kernel(kern, x, rel_compare);
     }
 }
 
-fn easy_compare(a: f64, b: f64) {
+fn ulp_compare(a: f64, b: f64) {
     assert_ulps_eq!(a,b, max_ulps=6);
 }
 
-fn hard_compare(a: f64, b: f64) {
+fn rel_compare(a: f64, b: f64) {
     assert_relative_eq!(a,b, max_relative=1e-13, epsilon=1e-14);
 }
 

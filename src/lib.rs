@@ -4,11 +4,19 @@ extern crate nalgebra;
 pub mod kernel;
 
 pub trait Real: nalgebra::Real + num_traits::Float + ::std::fmt::Debug {}
+impl<T> Real for T where T: nalgebra::Real + num_traits::Float + ::std::fmt::Debug {}
 
 use nalgebra::{Point3, Vector4, Vector3, DVector, Vector, Matrix3, Matrix4, Matrix3x4, DMatrix, U1, U3, U4, norm};
 use nalgebra::storage::Storage;
 use num_traits::Zero;
 use kernel::{Kernel, LocalKernel};
+
+/// Shorthands for HRBFs with specific kernels.
+pub type Pow3HRBF<T> = HRBF<T,kernel::Pow3<T>>;
+pub type Pow5HRBF<T> = HRBF<T,kernel::Pow5<T>>;
+pub type GaussHRBF<T> = HRBF<T,kernel::Gauss<T>>;
+pub type Csrbf31HRBF<T> = HRBF<T,kernel::Csrbf31<T>>;
+pub type Csrbf42HRBF<T> = HRBF<T,kernel::Csrbf42<T>>;
 
 /// HRBF specific kernel type. In general, we can assign a unique kernel to each hrbf site, or we
 /// can use the same kernel for all points. This corresponds to Variable and Constant kernel types
@@ -101,7 +109,7 @@ impl<T,K> HRBF<T,K>
 
         self.betas.clear();
         if let Some(x) = A.lu().solve(&b) {
-            assert!(x.len() == num_sites);
+            assert!(x.len() == 4*num_sites);
 
             self.betas.resize(num_sites, Vector4::zero());
             for j in 0..num_sites {
@@ -143,8 +151,9 @@ impl<T,K> HRBF<T,K>
 
         let ddf = self.kernel[j].ddf(l);
         let x_hat = x / l;
-        hess.ger_symm(ddf - df_l, &x_hat, &x_hat, df_l);
-        hess // df_l*I + x_hat*x_hat.transpose()*(ddf - df_l)
+        // df_l*I + x_hat*x_hat.transpose()*(ddf - df_l)
+        hess.ger(ddf - df_l, &x_hat, &x_hat, df_l);
+        hess
     }
 
     /// Given a vector `x` and its norm `l`, return the third derivative of the kernel evaluated
@@ -172,9 +181,9 @@ impl<T,K> HRBF<T,K>
 
         // TODO: optimize this expression. we can probably achieve the same thing with less flops
         // (bxT + xTb*I + xbT)*g + xxT*((dddf - T::from(3).unwrap()*g)*xTb)
-        mtx.ger_symm(_1, b, &x_hat, x_dot_b);
+        mtx.ger(_1, b, &x_hat, x_dot_b);
         mtx.ger(_1, &x_hat, b, _1);
-        mtx.ger_symm((dddf - _3*g)*x_dot_b, &x_hat, &x_hat, g);
+        mtx.ger((dddf - _3*g)*x_dot_b, &x_hat, &x_hat, g);
         mtx
     }
 
@@ -224,8 +233,8 @@ impl<T,K> HRBF<T,K>
         //    + I*(h3*xTc*xTb + g_l*cTb)
         //    + ((cxT + xcT)*xTb + (bxT + xbT)*xTc)*h3
         //    + (bcT + cbT)*g_l
-        res.ger_symm(a*x_dot_b*x_dot_c + h3*c_dot_b, &x_hat, &x_hat, h3*x_dot_c*x_dot_b + g_l*c_dot_b);
-        res.ger_symm(h3, &cb_sum, &x_hat, _1);
+        res.ger(a*x_dot_b*x_dot_c + h3*c_dot_b, &x_hat, &x_hat, h3*x_dot_c*x_dot_b + g_l*c_dot_b);
+        res.ger(h3, &cb_sum, &x_hat, _1);
         res.ger(h3, &x_hat, &cb_sum, _1);
         res + (bc_tr_plus_cb_tr)*g_l
     }
