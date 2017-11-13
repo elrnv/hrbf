@@ -5,14 +5,14 @@ extern crate nalgebra;
 #[macro_use]
 extern crate approx;
 
-#[allow(dead_code)]
-mod autodiff;
-
 use num_traits::Float;
 use hrbf::*;
 use hrbf::kernel::*;
-use autodiff::{Num, cst};
 use nalgebra::{Matrix3, Vector3, Point3};
+
+fn rel_compare(a: f64, b: f64) {
+    assert_relative_eq!(a,b, max_relative=1e-3, epsilon=1e-11);
+}
 
 fn cube() -> (Vec<Point3<f64>>, Vec<Vector3<f64>>) {
     // Fit an hrbf surface to a unit box
@@ -102,7 +102,7 @@ fn test_derivative_fd<F,K: Kernel<f64>>(x: Point3<f64>, compare: F, order: usize
     }
 }
 
-fn test_hrbf_simple<K: Kernel<f64>>(order: usize) {
+fn test_hrbf_derivative_simple<K: Kernel<f64>>(order: usize) {
     let test_pts = [
         Point3::new(0.5, 1.0, 0.5),
         Point3::new(0.1, 0.0, 0.0),
@@ -113,7 +113,7 @@ fn test_hrbf_simple<K: Kernel<f64>>(order: usize) {
     for &x in test_pts.iter() { test_derivative_fd::<_,K>(x, rel_compare, order); }
 }
 
-fn test_hrbf_random<K: Kernel<f64>>(order: usize) {
+fn test_hrbf_derivative_random<K: Kernel<f64>>(order: usize) {
     use self::rand::{SeedableRng, StdRng};
     use self::rand::distributions::{IndependentSample, Range};
 
@@ -128,10 +128,25 @@ fn test_hrbf_random<K: Kernel<f64>>(order: usize) {
     }
 }
 
+fn test_hrbf_fit<K: Kernel<f64>>() {
+    let (pts, nmls) = cube();
 
-fn rel_compare(a: f64, b: f64) {
-    assert_relative_eq!(a,b, max_relative=1e-3, epsilon=1e-11);
+    let mut hrbf = HRBF::<f64,K>::new(pts.clone());
+    assert!(hrbf.fit(&pts, &nmls));
+
+    for (p, n) in pts.into_iter().zip(nmls) {
+        let p_u = p + 0.001*n;
+        let p_l = p - 0.001*n;
+        rel_compare(hrbf.eval(p), 0.0);
+        assert!(hrbf.eval(p_l) < 0.0);
+        assert!(0.0 < hrbf.eval(p_u));
+        let g = hrbf.grad(p);
+        rel_compare(g[0], n[0]);
+        rel_compare(g[1], n[1]);
+        rel_compare(g[2], n[2]);
+    }
 }
+
 
 
 // NOTE: pow2 and pow4 kernels generate singular fit matrices whene data and sites are coincident.
@@ -140,33 +155,60 @@ fn rel_compare(a: f64, b: f64) {
 //
 // This is why pow2 and pow4 kernels aren't tested below.
 
+/// Derivative tests
 #[test]
-fn pow3_test() {
-    test_hrbf_simple::<Pow3<f64>>(1);
-    test_hrbf_random::<Pow3<f64>>(1);
+fn pow3_derivative_test() {
+    test_hrbf_derivative_simple::<Pow3<f64>>(1);
+    test_hrbf_derivative_random::<Pow3<f64>>(1);
 }
 
 #[test]
-fn pow5_test() {
-    test_hrbf_simple::<Pow5<f64>>(2);
-    test_hrbf_random::<Pow5<f64>>(2);
+fn pow5_derivative_test() {
+    test_hrbf_derivative_simple::<Pow5<f64>>(2);
+    test_hrbf_derivative_random::<Pow5<f64>>(2);
 }
 
 #[test]
-fn gauss_test() {
-    test_hrbf_simple::<Gauss<f64>>(2);
-    test_hrbf_random::<Gauss<f64>>(2);
+fn gauss_derivative_test() {
+    test_hrbf_derivative_simple::<Gauss<f64>>(2);
+    test_hrbf_derivative_random::<Gauss<f64>>(2);
 }
 
 #[test]
-fn csrbf31_test() {
-    test_hrbf_simple::<Csrbf31<f64>>(1);
-    test_hrbf_random::<Csrbf31<f64>>(1);
+fn csrbf31_derivative_test() {
+    test_hrbf_derivative_simple::<Csrbf31<f64>>(1);
+    test_hrbf_derivative_random::<Csrbf31<f64>>(1);
 }
 
 #[test]
-fn csrbf42_test() {
-    test_hrbf_simple::<Csrbf42<f64>>(2);
-    test_hrbf_random::<Csrbf42<f64>>(2);
+fn csrbf42_derivative_test() {
+    test_hrbf_derivative_simple::<Csrbf42<f64>>(2);
+    test_hrbf_derivative_random::<Csrbf42<f64>>(2);
 }
 
+
+/// Fit tests. Check that each of the kernels produce a reasonable fit to the data.
+#[test]
+fn pow3_fit_test() {
+    test_hrbf_fit::<Pow3<f64>>();
+}
+
+#[test]
+fn pow5_fit_test() {
+    test_hrbf_fit::<Pow5<f64>>();
+}
+
+#[test]
+fn gauss_fit_test() {
+    test_hrbf_fit::<Gauss<f64>>();
+}
+
+#[test]
+fn csrbf31_fit_test() {
+    test_hrbf_fit::<Csrbf31<f64>>();
+}
+
+#[test]
+fn csrbf42_fit_test() {
+    test_hrbf_fit::<Csrbf42<f64>>();
+}
