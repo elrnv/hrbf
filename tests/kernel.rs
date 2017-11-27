@@ -42,13 +42,13 @@ fn test_kernel<F,K: Kernel<Num>>(ker: K, x0: f64, compare: F)
     }
 }
 
-fn test_kernel_simple<K: Kernel<Num>>(kern: K) {
+fn test_kernel_simple<K: Kernel<Num> + Copy>(kern: K) {
     for &x in [0.0, 1.0, 0.5, ::std::f64::consts::PI].iter() {
         test_kernel(kern, x, ulp_compare);
     }
 }
 
-fn test_kernel_random<K: Kernel<Num>>(kern: K) {
+fn test_kernel_random<K: Kernel<Num> + Copy>(kern: K) {
     use self::rand::{SeedableRng, StdRng};
     use self::rand::distributions::{IndependentSample, Range};
 

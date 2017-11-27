@@ -30,7 +30,7 @@ use num_traits::{Float};
 use std::marker::PhantomData;
 
 /// Kernel trait declaring all of the necessary derivatives.
-pub trait Kernel<T> : Copy + Clone + Default
+pub trait Kernel<T>
     where T: Float
 {
     /// Main kernel function φ(x)
@@ -72,9 +72,15 @@ pub trait LocalKernel<T> where T: Float {
     fn new(r: T) -> Self;
 }
 
+/// Global kernel trait defines a constructor for kernels without a radial fallofff.
+pub trait GlobalKernel {
+    fn new() -> Self;
+}
 
 #[derive(Copy, Clone)]
 pub struct Pow2<T>(PhantomData<T>);
+
+impl<T: Float> GlobalKernel for Pow2<T> { fn new() -> Self { Pow2(PhantomData) } }
 
 /// Default constructor for `Pow2` kernel
 impl<T: Float> Default for Pow2<T> { fn default() -> Self { Pow2(PhantomData) } }
@@ -94,6 +100,8 @@ impl<T: Float> Kernel<T> for Pow2<T> {
 
 #[derive(Copy, Clone)]
 pub struct Pow3<T>(::std::marker::PhantomData<T>);
+
+impl<T: Float> GlobalKernel for Pow3<T> { fn new() -> Self { Pow3(PhantomData) } }
 
 /// Default constructor for `Pow3` kernel
 impl<T: Float> Default for Pow3<T> { fn default() -> Self { Pow3(PhantomData) } }
@@ -120,6 +128,8 @@ impl<T: Float> Kernel<T> for Pow3<T> {
 #[derive(Copy, Clone)]
 pub struct Pow4<T>(::std::marker::PhantomData<T>);
 
+impl<T: Float> GlobalKernel for Pow4<T> { fn new() -> Self { Pow4(PhantomData) } }
+
 /// Default constructor for `Pow4` kernel
 impl<T: Float> Default for Pow4<T> { fn default() -> Self { Pow4(PhantomData) } }
 
@@ -139,6 +149,8 @@ impl<T: Float> Kernel<T> for Pow4<T> {
 /// x^5 kernel.
 #[derive(Copy, Clone)]
 pub struct Pow5<T>(::std::marker::PhantomData<T>);
+
+impl<T: Float> GlobalKernel for Pow5<T> { fn new() -> Self { Pow5(PhantomData) } }
 
 /// Default constructor for `Pow5` kernel
 impl<T: Float> Default for Pow5<T> { fn default() -> Self { Pow5(PhantomData) } }

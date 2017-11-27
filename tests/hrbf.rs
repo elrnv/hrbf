@@ -7,7 +7,6 @@ extern crate approx;
 
 use num_traits::Float;
 use hrbf::*;
-use hrbf::kernel::*;
 use nalgebra::{Matrix3, Vector3, Point3};
 
 fn rel_compare(a: f64, b: f64) {
@@ -61,7 +60,7 @@ fn cube() -> (Vec<Point3<f64>>, Vec<Vector3<f64>>) {
 }
 
 /// Finite difference test
-fn test_derivative_fd<F,K: Kernel<f64>>(x: Point3<f64>, compare: F, order: usize)
+fn test_derivative_fd<F,K: Kernel<f64> + Default>(x: Point3<f64>, compare: F, order: usize)
     where F: Fn(f64, f64)
 {
     let (pts, nmls) = cube();
@@ -102,7 +101,7 @@ fn test_derivative_fd<F,K: Kernel<f64>>(x: Point3<f64>, compare: F, order: usize
     }
 }
 
-fn test_hrbf_derivative_simple<K: Kernel<f64>>(order: usize) {
+fn test_hrbf_derivative_simple<K: Kernel<f64> + Default>(order: usize) {
     let test_pts = [
         Point3::new(0.5, 1.0, 0.5),
         Point3::new(0.1, 0.0, 0.0),
@@ -113,7 +112,7 @@ fn test_hrbf_derivative_simple<K: Kernel<f64>>(order: usize) {
     for &x in test_pts.iter() { test_derivative_fd::<_,K>(x, rel_compare, order); }
 }
 
-fn test_hrbf_derivative_random<K: Kernel<f64>>(order: usize) {
+fn test_hrbf_derivative_random<K: Kernel<f64> + Default>(order: usize) {
     use self::rand::{SeedableRng, StdRng};
     use self::rand::distributions::{IndependentSample, Range};
 
@@ -128,7 +127,7 @@ fn test_hrbf_derivative_random<K: Kernel<f64>>(order: usize) {
     }
 }
 
-fn test_hrbf_fit<K: Kernel<f64>>() {
+fn test_hrbf_fit<K: Kernel<f64> + Default>() {
     let (pts, nmls) = cube();
 
     let mut hrbf = HRBF::<f64,K>::new(pts.clone());

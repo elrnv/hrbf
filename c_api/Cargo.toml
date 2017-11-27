@@ -1,0 +1,20 @@
+[package]
+name = "chrbf"
+version = "0.1.0"
+authors = ["Egor Larionov <egor.larionov@gmail.com>"]
+
+[lib]
+name = "chrbf"
+crate-type = ["cdylib", "rlib"] # rlib is needed for testing
+
+[dependencies]
+hrbf = { path = "../." }
+nalgebra = "*"
+libc = "*"
+
+[build-dependencies]
+cbindgen = { git = "https://github.com/eqrion/cbindgen.git" }
+
+[dev-dependencies]
+approx = "0.1"
+itertools = "0.7"
