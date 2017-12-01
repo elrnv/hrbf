@@ -26,8 +26,8 @@
 //! to see how these are used, see mesh_implicit_surface.cpp
 //! It must be that g(x), h(x,3) -> 0 as x -> 0 for the HRBF derivatives to exist.
 
-use num_traits::{Float};
 use std::marker::PhantomData;
+use num_traits::Float;
 
 /// Kernel trait declaring all of the necessary derivatives.
 pub trait Kernel<T>

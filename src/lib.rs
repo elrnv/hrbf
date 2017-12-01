@@ -1,15 +1,21 @@
 extern crate num_traits;
-extern crate nalgebra;
+extern crate nalgebra as na;
 
 pub mod kernel;
 
-pub trait Real: nalgebra::Real + num_traits::Float + ::std::fmt::Debug {}
-impl<T> Real for T where T: nalgebra::Real + num_traits::Float + ::std::fmt::Debug {}
+use na::{
+    Point3, Vector4, Vector3, DVector, Vector,
+    Matrix3, Matrix4, Matrix3x4, DMatrix,
+    U1, U3, U4,
+    norm
+};
+use na::storage::Storage;
+use num_traits::{Zero, Float};
+pub use kernel::*;
 
-use nalgebra::{Point3, Vector4, Vector3, DVector, Vector, Matrix3, Matrix4, Matrix3x4, DMatrix, U1, U3, U4, norm};
-use nalgebra::storage::Storage;
-use num_traits::Zero;
-pub use kernel::{Kernel, LocalKernel, GlobalKernel, Pow2, Pow3, Pow4, Pow5, Gauss, Csrbf31, Csrbf42};
+/// Floating point real trait used throughout this library.
+pub trait Real: Float + na::Real + ::std::fmt::Debug {}
+impl<T> Real for T where T: Float + na::Real + ::std::fmt::Debug {}
 
 /// Shorthand for an HRBF with a constant `x^3` kernel.
 pub type Pow3HRBF<T> = HRBF<T,kernel::Pow3<T>>;
