@@ -113,16 +113,15 @@ fn test_hrbf_derivative_simple<K: Kernel<f64> + Default>(order: usize) {
 }
 
 fn test_hrbf_derivative_random<K: Kernel<f64> + Default>(order: usize) {
-    use self::rand::{SeedableRng, StdRng};
-    use self::rand::distributions::{IndependentSample, Range};
+    use self::rand::{Rng, SeedableRng, StdRng, distributions::Uniform};
 
-    let seed: &[_] = &[1,2,3,4];
-    let mut rng: StdRng = SeedableRng::from_seed(seed);
-    let range = Range::new(-1.0, 1.0);
+    let seed = [3u8;32];
+    let mut rng = StdRng::from_seed(seed);
+    let range = Uniform::new(-1.0, 1.0);
     for _ in 0..99 {
-        let x = Point3::new(range.ind_sample(&mut rng), 
-                            range.ind_sample(&mut rng),
-                            range.ind_sample(&mut rng));
+        let x = Point3::new(rng.sample(range), 
+                            rng.sample(range),
+                            rng.sample(range));
         test_derivative_fd::<_,K>(x, rel_compare, order);
     }
 }

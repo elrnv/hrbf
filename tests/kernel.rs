@@ -49,14 +49,13 @@ fn test_kernel_simple<K: Kernel<Num> + Copy>(kern: K) {
 }
 
 fn test_kernel_random<K: Kernel<Num> + Copy>(kern: K) {
-    use self::rand::{SeedableRng, StdRng};
-    use self::rand::distributions::{IndependentSample, Range};
+    use self::rand::{Rng, SeedableRng, StdRng, distributions::Uniform};
 
-    let seed: &[_] = &[1,2,3,4];
-    let mut rng: StdRng = SeedableRng::from_seed(seed);
-    let range = Range::new(-1.0, 1.0);
+    let seed = [3; 32];
+    let mut rng = StdRng::from_seed(seed);
+    let range = Uniform::new(-1.0, 1.0);
     for _ in 0..999 {
-        let x = range.ind_sample(&mut rng);
+        let x = rng.sample(range);
         test_kernel(kern, x, rel_compare);
     }
 }
@@ -66,7 +65,7 @@ fn ulp_compare(a: f64, b: f64) {
 }
 
 fn rel_compare(a: f64, b: f64) {
-    assert_relative_eq!(a,b, max_relative=1e-13, epsilon=1e-14);
+    assert_relative_eq!(a,b, max_relative=1e-12, epsilon=1e-14);
 }
 
 #[test]
