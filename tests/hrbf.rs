@@ -1,16 +1,16 @@
-extern crate num_traits;
 extern crate hrbf;
-extern crate rand;
 extern crate nalgebra;
+extern crate num_traits;
+extern crate rand;
 #[macro_use]
 extern crate approx;
 
-use num_traits::Float;
 use hrbf::*;
-use nalgebra::{Matrix3, Vector3, Point3};
+use nalgebra::{Matrix3, Point3, Vector3};
+use num_traits::Float;
 
 fn rel_compare(a: f64, b: f64) {
-    assert_relative_eq!(a,b, max_relative=1e-3, epsilon=1e-11);
+    assert_relative_eq!(a, b, max_relative = 1e-3, epsilon = 1e-11);
 }
 
 fn cube() -> (Vec<Point3<f64>>, Vec<Vector3<f64>>) {
@@ -25,7 +25,6 @@ fn cube() -> (Vec<Point3<f64>>, Vec<Vector3<f64>>) {
         Point3::new(1.0, 0.0, 1.0),
         Point3::new(1.0, 1.0, 0.0),
         Point3::new(1.0, 1.0, 1.0),
-
         // Extra vertices on box faces
         Point3::new(0.5, 0.5, 0.0),
         Point3::new(0.5, 0.5, 1.0),
@@ -35,59 +34,62 @@ fn cube() -> (Vec<Point3<f64>>, Vec<Vector3<f64>>) {
         Point3::new(1.0, 0.5, 0.5),
     ];
 
-    let a = 1.0f64/3.0.sqrt();
+    let a = 1.0f64 / 3.0.sqrt();
     let nmls = vec![
         // Corner normals
         Vector3::new(-a, -a, -a),
-        Vector3::new(-a, -a,  a),
-        Vector3::new(-a,  a, -a),
-        Vector3::new(-a,  a,  a),
-        Vector3::new( a, -a, -a),
-        Vector3::new( a, -a,  a),
-        Vector3::new( a,  a, -a),
-        Vector3::new( a,  a,  a),
-
+        Vector3::new(-a, -a, a),
+        Vector3::new(-a, a, -a),
+        Vector3::new(-a, a, a),
+        Vector3::new(a, -a, -a),
+        Vector3::new(a, -a, a),
+        Vector3::new(a, a, -a),
+        Vector3::new(a, a, a),
         // Side normals
-        Vector3::new( 0.0,  0.0, -1.0),
-        Vector3::new( 0.0,  0.0,  1.0),
-        Vector3::new( 0.0, -1.0,  0.0),
-        Vector3::new( 0.0,  1.0,  0.0),
-        Vector3::new(-1.0,  0.0,  0.0),
-        Vector3::new( 1.0,  0.0,  0.0),
+        Vector3::new(0.0, 0.0, -1.0),
+        Vector3::new(0.0, 0.0, 1.0),
+        Vector3::new(0.0, -1.0, 0.0),
+        Vector3::new(0.0, 1.0, 0.0),
+        Vector3::new(-1.0, 0.0, 0.0),
+        Vector3::new(1.0, 0.0, 0.0),
     ];
 
     (pts, nmls)
 }
 
 /// Finite difference test
-fn test_derivative_fd<F,K: Kernel<f64> + Default>(x: Point3<f64>, compare: F, order: usize)
-    where F: Fn(f64, f64)
+fn test_derivative_fd<F, K: Kernel<f64> + Default>(x: Point3<f64>, compare: F, order: usize)
+where
+    F: Fn(f64, f64),
 {
     let (pts, nmls) = cube();
 
-    let mut hrbf = HRBF::<f64,K>::new(pts.clone());
+    let mut hrbf = HRBF::<f64, K>::new(pts.clone());
     assert!(hrbf.fit(&pts, &nmls));
 
     // We will test hrbf derivatives using central differencing away from zeros since autodiff
     // fails in these scenarios because it can't simplify expressions with division by zero.
-    
-    let dx = 1.0/8192.0;
+
+    let dx = 1.0 / 8192.0;
     let basis = vec![Vector3::x(), Vector3::y(), Vector3::z()];
-    let h: Vec<Vector3<f64>> = basis.into_iter().map(|x| x*(0.5*dx)).collect();
+    let h: Vec<Vector3<f64>> = basis.into_iter().map(|x| x * (0.5 * dx)).collect();
 
     // central finite difference function
-    let cdf = |x: Point3<f64>| Vector3::new(0,1,2).map(|dir| hrbf.eval(x + h[dir]) - hrbf.eval(x - h[dir]));
+    let cdf = |x: Point3<f64>| {
+        Vector3::new(0, 1, 2).map(|dir| hrbf.eval(x + h[dir]) - hrbf.eval(x - h[dir]))
+    };
     let fdf = cdf(x); // finite difference approximation
-    
+
     // central finite difference for second derivative
     let cddf_dir = |x: Point3<f64>, dir: usize| cdf(x + h[dir]) - cdf(x - h[dir]);
-    let cddf = |x: Point3<f64>| Matrix3::from_columns(&[cddf_dir(x,0), cddf_dir(x,1), cddf_dir(x,2)]);
+    let cddf =
+        |x: Point3<f64>| Matrix3::from_columns(&[cddf_dir(x, 0), cddf_dir(x, 1), cddf_dir(x, 2)]);
     let fddf = cddf(x).transpose();
 
     if order > 0 {
         let df = hrbf.grad(x);
         for k in 0..3 {
-            compare(fdf[k], dx*df[k]);
+            compare(fdf[k], dx * df[k]);
         }
     }
 
@@ -95,7 +97,7 @@ fn test_derivative_fd<F,K: Kernel<f64> + Default>(x: Point3<f64>, compare: F, or
         let ddf = hrbf.hess(x);
         for k in 0..3 {
             for l in 0..3 {
-                compare(fddf[(l,k)], dx*dx*ddf[(l,k)]);
+                compare(fddf[(l, k)], dx * dx * ddf[(l, k)]);
             }
         }
     }
@@ -109,32 +111,32 @@ fn test_hrbf_derivative_simple<K: Kernel<f64> + Default>(order: usize) {
         Point3::new(0.0, 0.0, 0.1),
     ];
 
-    for &x in test_pts.iter() { test_derivative_fd::<_,K>(x, rel_compare, order); }
+    for &x in test_pts.iter() {
+        test_derivative_fd::<_, K>(x, rel_compare, order);
+    }
 }
 
 fn test_hrbf_derivative_random<K: Kernel<f64> + Default>(order: usize) {
-    use self::rand::{Rng, SeedableRng, StdRng, distributions::Uniform};
+    use self::rand::{distributions::Uniform, Rng, SeedableRng, StdRng};
 
-    let seed = [3u8;32];
+    let seed = [3u8; 32];
     let mut rng = StdRng::from_seed(seed);
     let range = Uniform::new(-1.0, 1.0);
     for _ in 0..99 {
-        let x = Point3::new(rng.sample(range), 
-                            rng.sample(range),
-                            rng.sample(range));
-        test_derivative_fd::<_,K>(x, rel_compare, order);
+        let x = Point3::new(rng.sample(range), rng.sample(range), rng.sample(range));
+        test_derivative_fd::<_, K>(x, rel_compare, order);
     }
 }
 
 fn test_hrbf_fit<K: Kernel<f64> + Default>() {
     let (pts, nmls) = cube();
 
-    let mut hrbf = HRBF::<f64,K>::new(pts.clone());
+    let mut hrbf = HRBF::<f64, K>::new(pts.clone());
     assert!(hrbf.fit(&pts, &nmls));
 
     for (p, n) in pts.into_iter().zip(nmls) {
-        let p_u = p + 0.001*n;
-        let p_l = p - 0.001*n;
+        let p_u = p + 0.001 * n;
+        let p_l = p - 0.001 * n;
         rel_compare(hrbf.eval(p), 0.0);
         assert!(hrbf.eval(p_l) < 0.0);
         assert!(0.0 < hrbf.eval(p_u));
@@ -144,8 +146,6 @@ fn test_hrbf_fit<K: Kernel<f64> + Default>() {
         rel_compare(g[2], n[2]);
     }
 }
-
-
 
 // NOTE: pow2 and pow4 kernels generate singular fit matrices whene data and sites are coincident.
 // It is perhaps still possible to use these for least squares fits. The nice thing about x^2 is
@@ -183,7 +183,6 @@ fn csrbf42_derivative_test() {
     test_hrbf_derivative_simple::<Csrbf42<f64>>(2);
     test_hrbf_derivative_random::<Csrbf42<f64>>(2);
 }
-
 
 /// Fit tests. Check that each of the kernels produce a reasonable fit to the data.
 #[test]

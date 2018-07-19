@@ -1,32 +1,30 @@
-extern crate num_traits;
 extern crate nalgebra as na;
+extern crate num_traits;
 
 pub mod kernel;
 
-use na::{
-    Point3, Vector4, Vector3, DVector, Vector,
-    Matrix3, Matrix4, Matrix3x4, DMatrix,
-    U1, U3, U4,
-    norm
-};
-use na::storage::Storage;
-use num_traits::{Zero, Float};
 pub use kernel::*;
+use na::storage::Storage;
+use na::{
+    norm, DMatrix, DVector, Matrix3, Matrix3x4, Matrix4, Point3, U1, U3, U4, Vector, Vector3,
+    Vector4,
+};
+use num_traits::{Float, Zero};
 
 /// Floating point real trait used throughout this library.
 pub trait Real: Float + na::Real + ::std::fmt::Debug {}
 impl<T> Real for T where T: Float + na::Real + ::std::fmt::Debug {}
 
 /// Shorthand for an HRBF with a constant `x^3` kernel.
-pub type Pow3HRBF<T> = HRBF<T,kernel::Pow3<T>>;
+pub type Pow3HRBF<T> = HRBF<T, kernel::Pow3<T>>;
 /// Shorthand for an HRBF with a constant `x^5` kernel.
-pub type Pow5HRBF<T> = HRBF<T,kernel::Pow5<T>>;
+pub type Pow5HRBF<T> = HRBF<T, kernel::Pow5<T>>;
 /// Shorthand for an HRBF with a constant Gaussian `exp(-x*x)` kernel.
-pub type GaussHRBF<T> = HRBF<T,kernel::Gauss<T>>;
+pub type GaussHRBF<T> = HRBF<T, kernel::Gauss<T>>;
 /// Shorthand for an HRBF with a constant CSRBF(3,1) `(1-x)^4 (4x+1)` kernel of type.
-pub type Csrbf31HRBF<T> = HRBF<T,kernel::Csrbf31<T>>;
+pub type Csrbf31HRBF<T> = HRBF<T, kernel::Csrbf31<T>>;
 /// Shorthand for an HRBF with a constant CSRBF(4,1) `(1-x)^6 (35x^2 + 18x + 3)` kernel of type.
-pub type Csrbf42HRBF<T> = HRBF<T,kernel::Csrbf42<T>>;
+pub type Csrbf42HRBF<T> = HRBF<T, kernel::Csrbf42<T>>;
 
 /// HRBF specific kernel type. In general, we can assign a unique kernel to each HRBF site, or we
 /// can use the same kernel for all points. This corresponds to Variable and Constant kernel types
@@ -50,60 +48,75 @@ impl<K> ::std::ops::Index<usize> for KernelType<K> {
 
 #[derive(Clone, Debug)]
 pub struct HRBF<T, K>
-    where T: Real,
-          K: Kernel<T>
+where
+    T: Real,
+    K: Kernel<T>,
 {
     sites: Vec<Point3<T>>,
     betas: Vec<Vector4<T>>,
     kernel: KernelType<K>,
 }
 
-
 /// HRBF public interface. It is not necessary to use this trait, but it allows using the HRBF as a
 /// trait object. For example this is used to pass HRBF objects between functions in the C API.
 pub trait HRBFTrait<T: Real> {
     fn fit(&mut self, points: &Vec<Point3<T>>, normals: &Vec<Vector3<T>>) -> bool;
-    fn fit_offset(&mut self,
-                  points: &Vec<Point3<T>>,
-                  offsets: &Vec<T>,
-                  normals: &Vec<Vector3<T>>) -> bool;
-    fn fit_system(&self,
-                  points: &Vec<Point3<T>>,
-                  potential: &Vec<T>,
-                  normals: &Vec<Vector3<T>>) -> (DMatrix<T>, DVector<T>);
+    fn fit_offset(
+        &mut self,
+        points: &Vec<Point3<T>>,
+        offsets: &Vec<T>,
+        normals: &Vec<Vector3<T>>,
+    ) -> bool;
+    fn fit_system(
+        &self,
+        points: &Vec<Point3<T>>,
+        potential: &Vec<T>,
+        normals: &Vec<Vector3<T>>,
+    ) -> (DMatrix<T>, DVector<T>);
     fn eval(&self, p: Point3<T>) -> T;
     fn grad(&self, p: Point3<T>) -> Vector3<T>;
     fn hess(&self, p: Point3<T>) -> Matrix3<T>;
 }
 
-impl<T,K> HRBFTrait<T> for HRBF<T,K> 
-    where T: Real,
-          K: Kernel<T> + Default
+impl<T, K> HRBFTrait<T> for HRBF<T, K>
+where
+    T: Real,
+    K: Kernel<T> + Default,
 {
     fn fit(&mut self, points: &Vec<Point3<T>>, normals: &Vec<Vector3<T>>) -> bool {
         HRBF::fit(self, points, normals)
     }
-    fn fit_offset(&mut self,
-                  points: &Vec<Point3<T>>,
-                  offsets: &Vec<T>,
-                  normals: &Vec<Vector3<T>>) -> bool {
+    fn fit_offset(
+        &mut self,
+        points: &Vec<Point3<T>>,
+        offsets: &Vec<T>,
+        normals: &Vec<Vector3<T>>,
+    ) -> bool {
         HRBF::fit_offset(self, points, offsets, normals)
     }
-    fn fit_system(&self,
-                  points: &Vec<Point3<T>>,
-                  potential: &Vec<T>,
-                  normals: &Vec<Vector3<T>>) -> (DMatrix<T>, DVector<T>) {
+    fn fit_system(
+        &self,
+        points: &Vec<Point3<T>>,
+        potential: &Vec<T>,
+        normals: &Vec<Vector3<T>>,
+    ) -> (DMatrix<T>, DVector<T>) {
         HRBF::fit_system(self, points, potential, normals)
     }
-    fn eval(&self, p: Point3<T>) -> T { HRBF::eval(self, p) }
-    fn grad(&self, p: Point3<T>) -> Vector3<T> { HRBF::grad(self, p) }
-    fn hess(&self, p: Point3<T>) -> Matrix3<T> { HRBF::hess(self, p) }
+    fn eval(&self, p: Point3<T>) -> T {
+        HRBF::eval(self, p)
+    }
+    fn grad(&self, p: Point3<T>) -> Vector3<T> {
+        HRBF::grad(self, p)
+    }
+    fn hess(&self, p: Point3<T>) -> Matrix3<T> {
+        HRBF::hess(self, p)
+    }
 }
 
-
-impl<T,K> Default for HRBF<T,K>
-    where T: Real,
-          K: Kernel<T> + Default
+impl<T, K> Default for HRBF<T, K>
+where
+    T: Real,
+    K: Kernel<T> + Default,
 {
     fn default() -> Self {
         HRBF {
@@ -114,9 +127,10 @@ impl<T,K> Default for HRBF<T,K>
     }
 }
 
-impl<T,K> HRBF<T,K>
-    where T: Real,
-          K: Kernel<T> + LocalKernel<T>
+impl<T, K> HRBF<T, K>
+where
+    T: Real,
+    K: Kernel<T> + LocalKernel<T>,
 {
     pub fn radius(mut self, radius: T) -> Self {
         self.kernel = KernelType::Constant(K::new(radius));
@@ -129,9 +143,10 @@ impl<T,K> HRBF<T,K>
     }
 }
 
-impl<T,K> HRBF<T,K>
-    where T: Real,
-          K: Kernel<T> + Default
+impl<T, K> HRBF<T, K>
+where
+    T: Real,
+    K: Kernel<T> + Default,
 {
     /// Main constructor. Assigns the degrees of freedom used by this HRBF in a form of 3D points
     /// at which the kernel will be evaluated.
@@ -174,11 +189,11 @@ impl<T,K> HRBF<T,K>
 
         self.betas.clear();
         if let Some(x) = A.lu().solve(&b) {
-            assert!(x.len() == 4*num_sites);
+            assert!(x.len() == 4 * num_sites);
 
             self.betas.resize(num_sites, Vector4::zero());
             for j in 0..num_sites {
-                self.betas[j].copy_from(&x.fixed_rows::<U4>(4*j));
+                self.betas[j].copy_from(&x.fixed_rows::<U4>(4 * j));
             }
 
             true
@@ -192,10 +207,12 @@ impl<T,K> HRBF<T,K>
     /// Return true if successful.
     /// NOTE: Currently, points must be the same size as as sites.
     #[allow(non_snake_case)]
-    pub fn fit_offset(&mut self,
-                      points: &Vec<Point3<T>>,
-                      offsets: &Vec<T>,
-                      normals: &Vec<Vector3<T>>) -> bool {
+    pub fn fit_offset(
+        &mut self,
+        points: &Vec<Point3<T>>,
+        offsets: &Vec<T>,
+        normals: &Vec<Vector3<T>>,
+    ) -> bool {
         assert!(normals.len() == points.len());
         let num_sites = self.sites.len();
 
@@ -203,11 +220,11 @@ impl<T,K> HRBF<T,K>
 
         self.betas.clear();
         if let Some(x) = A.lu().solve(&b) {
-            assert!(x.len() == 4*num_sites);
+            assert!(x.len() == 4 * num_sites);
 
             self.betas.resize(num_sites, Vector4::zero());
             for j in 0..num_sites {
-                self.betas[j].copy_from(&x.fixed_rows::<U4>(4*j));
+                self.betas[j].copy_from(&x.fixed_rows::<U4>(4 * j));
             }
 
             true
@@ -221,23 +238,25 @@ impl<T,K> HRBF<T,K>
     /// and normal at data point `i`, so `A.inverse()*b` gives the `betas` (or weights)
     /// defining the HRBF potential.
     #[allow(non_snake_case)]
-    pub fn fit_system(&self,
-                      points: &Vec<Point3<T>>,
-                      potential: &Vec<T>,
-                      normals: &Vec<Vector3<T>>) -> (DMatrix<T>, DVector<T>)
-    {
+    pub fn fit_system(
+        &self,
+        points: &Vec<Point3<T>>,
+        potential: &Vec<T>,
+        normals: &Vec<Vector3<T>>,
+    ) -> (DMatrix<T>, DVector<T>) {
         assert!(normals.len() == points.len());
         assert!(potential.len() == points.len());
-        let rows = 4*points.len();
+        let rows = 4 * points.len();
         let num_sites = self.sites.len();
-        let cols = 4*num_sites;
-        let mut A = DMatrix::<T>::zeros(rows,cols);
+        let cols = 4 * num_sites;
+        let mut A = DMatrix::<T>::zeros(rows, cols);
         let mut b = DVector::<T>::zeros(rows);
         for (i, p) in points.iter().enumerate() {
-            b[4*i] = potential[i];
-            b.fixed_rows_mut::<U3>(4*i+1).copy_from(&normals[i]);
+            b[4 * i] = potential[i];
+            b.fixed_rows_mut::<U3>(4 * i + 1).copy_from(&normals[i]);
             for j in 0..num_sites {
-                A.fixed_slice_mut::<U4, U4>(4*i,4*j).copy_from(&self.fit_block(*p,j));
+                A.fixed_slice_mut::<U4, U4>(4 * i, 4 * j)
+                    .copy_from(&self.fit_block(*p, j));
             }
         }
         (A, b)
@@ -246,11 +265,11 @@ impl<T,K> HRBF<T,K>
     /// The following are derivatives of the function
     ///
     /// `phi(x) := kernel(|x|)`
-    /// 
+    ///
     /// Given a vector `x` and its norm `l`, return the gradient of the kernel evaluated
     /// at `l` wrt `x`. `j` denotes the site at which the kernel is evaluated.
     fn grad_phi(&self, x: Vector3<T>, l: T, j: usize) -> Vector3<T> {
-        x*self.kernel[j].df_l(l)
+        x * self.kernel[j].df_l(l)
     }
 
     // TODO: The computations below do more than needed. For instance most computed
@@ -265,9 +284,9 @@ impl<T,K> HRBF<T,K>
         if l <= T::zero() {
             debug_assert!({
                 let g = self.kernel[j].ddf(l) - df_l;
-                g*g < T::from(1e-12).unwrap()
+                g * g < T::from(1e-12).unwrap()
             });
-            return hess*df_l;
+            return hess * df_l;
         }
 
         let ddf = self.kernel[j].ddf(l);
@@ -280,8 +299,15 @@ impl<T,K> HRBF<T,K>
     /// Given a vector `x` and its norm `l`, return the third derivative of the kernel evaluated
     /// at `l` wrt `x` when multiplied by vector b.
     /// `j` denotes the site at which the kernel is evaluated.
-    fn third_deriv_prod_phi<S>(&self, x: Vector3<T>, l: T, b: &Vector<T,U3,S>, j: usize) -> Matrix3<T>
-        where S: Storage<T, U3, U1>
+    fn third_deriv_prod_phi<S>(
+        &self,
+        x: Vector3<T>,
+        l: T,
+        b: &Vector<T, U3, S>,
+        j: usize,
+    ) -> Matrix3<T>
+    where
+        S: Storage<T, U3, U1>,
     {
         if l <= T::zero() {
             debug_assert!({
@@ -304,7 +330,7 @@ impl<T,K> HRBF<T,K>
         // (bxT + xTb*I + xbT)*g + xxT*((dddf - T::from(3).unwrap()*g)*xTb)
         mtx.ger(_1, b, &x_hat, x_dot_b);
         mtx.ger(_1, &x_hat, b, _1);
-        mtx.ger((dddf - _3*g)*x_dot_b, &x_hat, &x_hat, g);
+        mtx.ger((dddf - _3 * g) * x_dot_b, &x_hat, &x_hat, g);
         mtx
     }
 
@@ -312,41 +338,51 @@ impl<T,K> HRBF<T,K>
     /// evaluated at `l` wrt `x` when multiplied by vectors b and c.
     /// `j` denotes the site at which the kernel is evaluated.
     #[inline]
-    fn fourth_deriv_prod_phi<S>(&self,
-                                x: Vector3<T>,
-                                l: T,
-                                b: &Vector<T,U3,S>,
-                                c: &Vector<T,U3,S>,
-                                j: usize) -> Matrix3<T>
-        where S: Storage<T, U3, U1>
+    fn fourth_deriv_prod_phi<S>(
+        &self,
+        x: Vector3<T>,
+        l: T,
+        b: &Vector<T, U3, S>,
+        c: &Vector<T, U3, S>,
+        j: usize,
+    ) -> Matrix3<T>
+    where
+        S: Storage<T, U3, U1>,
     {
         let g_l = self.kernel[j].g_l(l);
         let bc_tr = Matrix3::new(
-            b[0]*c[0], b[1]*c[0], b[2]*c[0],
-            b[0]*c[1], b[1]*c[1], b[2]*c[1],
-            b[0]*c[2], b[1]*c[2], b[2]*c[2]);
+            b[0] * c[0],
+            b[1] * c[0],
+            b[2] * c[0],
+            b[0] * c[1],
+            b[1] * c[1],
+            b[2] * c[1],
+            b[0] * c[2],
+            b[1] * c[2],
+            b[2] * c[2],
+        );
         let c_dot_b = bc_tr.trace();
         let bc_tr_plus_cb_tr = bc_tr + bc_tr.transpose();
         let mut res = Matrix3::identity();
         if l <= T::zero() {
             debug_assert!({
-                let h3 = self.kernel[j].h(l,T::from(3).unwrap());
-                let h52 = self.kernel[j].h(l,T::from(5.0/2.0).unwrap());
+                let h3 = self.kernel[j].h(l, T::from(3).unwrap());
+                let h52 = self.kernel[j].h(l, T::from(5.0 / 2.0).unwrap());
                 let ddddf = self.kernel[j].ddddf(l);
-                let a = ddddf - T::from(6.0).unwrap()*h52;
-                h3 == T::zero() && a*a < T::from(1e-12).unwrap()
+                let a = ddddf - T::from(6.0).unwrap() * h52;
+                h3 == T::zero() && a * a < T::from(1e-12).unwrap()
             });
-            return res*(g_l*c_dot_b) + (bc_tr_plus_cb_tr)*g_l;
+            return res * (g_l * c_dot_b) + (bc_tr_plus_cb_tr) * g_l;
         }
 
-        let h3 = self.kernel[j].h(l,T::from(3).unwrap());
-        let h52 = self.kernel[j].h(l,T::from(5.0/2.0).unwrap());
+        let h3 = self.kernel[j].h(l, T::from(3).unwrap());
+        let h52 = self.kernel[j].h(l, T::from(5.0 / 2.0).unwrap());
         let ddddf = self.kernel[j].ddddf(l);
-        let a = ddddf - T::from(6.0).unwrap()*h52;
+        let a = ddddf - T::from(6.0).unwrap() * h52;
         let x_hat = x / l;
         let x_dot_b = x_hat.dot(b);
         let x_dot_c = x_hat.dot(c);
-        let cb_sum = c*x_dot_b + b*x_dot_c;
+        let cb_sum = c * x_dot_b + b * x_dot_c;
         let _1 = T::one();
 
         // TODO: optimize this expression. we can probably achieve the same thing with less flops
@@ -354,15 +390,21 @@ impl<T,K> HRBF<T,K>
         //    + I*(h3*xTc*xTb + g_l*cTb)
         //    + ((cxT + xcT)*xTb + (bxT + xbT)*xTc)*h3
         //    + (bcT + cbT)*g_l
-        res.ger(a*x_dot_b*x_dot_c + h3*c_dot_b, &x_hat, &x_hat, h3*x_dot_c*x_dot_b + g_l*c_dot_b);
+        res.ger(
+            a * x_dot_b * x_dot_c + h3 * c_dot_b,
+            &x_hat,
+            &x_hat,
+            h3 * x_dot_c * x_dot_b + g_l * c_dot_b,
+        );
         res.ger(h3, &cb_sum, &x_hat, _1);
         res.ger(h3, &x_hat, &cb_sum, _1);
-        res + (bc_tr_plus_cb_tr)*g_l
+        res + (bc_tr_plus_cb_tr) * g_l
     }
 
     /// Evaluate the HRBF at point `p`.
     pub fn eval(&self, p: Point3<T>) -> T {
-        self.betas.iter()
+        self.betas
+            .iter()
             .enumerate()
             .fold(T::zero(), |sum, (j, b)| sum + self.eval_block(p, j).dot(b))
     }
@@ -378,9 +420,12 @@ impl<T,K> HRBF<T,K>
 
     /// Gradient of the HRBF function at point `p`.
     pub fn grad(&self, p: Point3<T>) -> Vector3<T> {
-        self.betas.iter()
+        self.betas
+            .iter()
             .enumerate()
-            .fold(Vector3::zero(), |sum, (j, b)| sum + self.grad_block(p, j)*b)
+            .fold(Vector3::zero(), |sum, (j, b)| {
+                sum + self.grad_block(p, j) * b
+            })
     }
 
     /// Helper function for `grad`. Returns a 3x4 matrix that gives the gradient of the HRBF when
@@ -390,16 +435,19 @@ impl<T,K> HRBF<T,K>
         let l = norm(&x);
         let h = self.hess_phi(x, l, j);
         let mut grad = Matrix3x4::zero();
-        grad.column_mut(0).copy_from(&self.grad_phi(x,l,j));
+        grad.column_mut(0).copy_from(&self.grad_phi(x, l, j));
         grad.fixed_columns_mut::<U3>(1).copy_from(&h);
         grad
     }
 
     /// Compute the hessian of the HRBF function.
     pub fn hess(&self, p: Point3<T>) -> Matrix3<T> {
-        self.betas.iter()
+        self.betas
+            .iter()
             .enumerate()
-            .fold(Matrix3::zero(), |sum, (j, b)| sum + self.hess_block_prod(p, b, j))
+            .fold(Matrix3::zero(), |sum, (j, b)| {
+                sum + self.hess_block_prod(p, b, j)
+            })
     }
 
     /// Helper function for computing the hessian
@@ -409,7 +457,7 @@ impl<T,K> HRBF<T,K>
         let l = norm(&x);
         let b3 = b.fixed_rows::<U3>(1);
         let h = self.hess_phi(x, l, j);
-        h*b[0] + self.third_deriv_prod_phi(x, l, &b3, j)
+        h * b[0] + self.third_deriv_prod_phi(x, l, &b3, j)
     }
 
     /// Advanced. Recall that the HRBF fit is done as
@@ -418,7 +466,7 @@ impl<T,K> HRBF<T,K>
     /// ∑ⱼ ⎡  𝜙(𝑥ᵢ - 𝑥ⱼ)  ∇𝜙(𝑥ᵢ - 𝑥ⱼ)'⎤ ⎡ 𝛼ⱼ⎤ = ⎡ 0 ⎤
     ///    ⎣ ∇𝜙(𝑥ᵢ - 𝑥ⱼ) ∇∇𝜙(𝑥ᵢ - 𝑥ⱼ) ⎦ ⎣ 𝛽ⱼ⎦   ⎣ 𝑛ᵢ⎦
     /// ```
-    /// 
+    ///
     /// for every HRBF site i, where the sum runs over HRBF sites j
     /// where 𝜙(𝑥) = 𝜑(||𝑥||) for one of the basis kernels we define in kernel.rs
     /// If we rewrite the equation above as
@@ -439,10 +487,23 @@ impl<T,K> HRBF<T,K>
         let g = self.grad_phi(x, l, j);
         let h = self.hess_phi(x, l, j);
         Matrix4::new(
-            w, g[0], g[1], g[2],
-            g[0], h[(0,0)], h[(0,1)], h[(0,2)],
-            g[1], h[(1,0)], h[(1,1)], h[(1,2)],
-            g[2], h[(2,0)], h[(2,1)], h[(2,2)])
+            w,
+            g[0],
+            g[1],
+            g[2],
+            g[0],
+            h[(0, 0)],
+            h[(0, 1)],
+            h[(0, 2)],
+            g[1],
+            h[(1, 0)],
+            h[(1, 1)],
+            h[(1, 2)],
+            g[2],
+            h[(2, 0)],
+            h[(2, 1)],
+            h[(2, 2)],
+        )
     }
 
     /// Advanced. Using the same notation as above,
@@ -456,10 +517,10 @@ impl<T,K> HRBF<T,K>
         let g = self.grad_phi(x, l, j);
         let h = self.hess_phi(x, l, j);
 
-        let third = h*b[0] + self.third_deriv_prod_phi(x, l, &b3, j);
+        let third = h * b[0] + self.third_deriv_prod_phi(x, l, &b3, j);
 
         let mut grad = Matrix3x4::zero();
-        grad.column_mut(0).copy_from(&(g*b[0] + h*b3));
+        grad.column_mut(0).copy_from(&(g * b[0] + h * b3));
         grad.fixed_columns_mut::<U3>(1).copy_from(&third);
         grad
     }
@@ -479,15 +540,16 @@ impl<T,K> HRBF<T,K>
         let b = self.betas[j].fixed_rows::<U3>(1);
 
         // Compute in blocks
-        self.hess_phi(x, l, j)*c[0] * a
-            + self.third_deriv_prod_phi(x, l, &b, j)*c[0]
-            + self.third_deriv_prod_phi(x, l, &c3, j)*a
+        self.hess_phi(x, l, j) * c[0] * a
+            + self.third_deriv_prod_phi(x, l, &b, j) * c[0]
+            + self.third_deriv_prod_phi(x, l, &c3, j) * a
             + self.fourth_deriv_prod_phi(x, l, &b, &c3, j)
     }
 
     /// Sum of hess_fit_prod_block evaluated at all sites.
     pub fn hess_fit_prod(&self, p: Point3<T>, c: Vector4<T>) -> Matrix3<T> {
-        (0..self.sites.len())
-            .fold(Matrix3::zero(), |sum, j| sum + self.hess_fit_prod_block(p, c, j))
+        (0..self.sites.len()).fold(Matrix3::zero(), |sum, j| {
+            sum + self.hess_fit_prod_block(p, c, j)
+        })
     }
 }

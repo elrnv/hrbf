@@ -1,5 +1,5 @@
-extern crate num_traits;
 extern crate hrbf;
+extern crate num_traits;
 extern crate rand;
 #[macro_use]
 extern crate approx;
@@ -7,13 +7,14 @@ extern crate approx;
 #[allow(dead_code)]
 mod autodiff;
 
+use autodiff::{cst, Num};
 use hrbf::kernel::*;
-use autodiff::{Num, cst};
 
 const TEST_RADIUS: f64 = 2.0;
 
-fn test_kernel<F,K: Kernel<Num>>(ker: K, x0: f64, compare: F)
-    where F: Fn(f64, f64)
+fn test_kernel<F, K: Kernel<Num>>(ker: K, x0: f64, compare: F)
+where
+    F: Fn(f64, f64),
 {
     let x = Num { val: x0, eps: 1.0 };
 
@@ -33,12 +34,18 @@ fn test_kernel<F,K: Kernel<Num>>(ker: K, x0: f64, compare: F)
         let g = ker.g(x);
         let g_l = ker.g_l(x);
         let h3 = ker.h(x, cst(3.0));
-        let h52 = ker.h(x, cst(5.0/2.0));
-        compare(x0*df_l.val, df.val);
-        compare(x0*x0*g.val, ddf.val*x0 - df.val);
-        compare(x0*g_l.val, g.val);
-        compare(x0*x0*x0*h3.val, x0*x0*dddf.val - 3.0*(x0*ddf.val - df.val));
-        compare(x0*x0*x0*h52.val, x0*x0*dddf.val - 0.5*5.0*(x0*ddf.val - df.val));
+        let h52 = ker.h(x, cst(5.0 / 2.0));
+        compare(x0 * df_l.val, df.val);
+        compare(x0 * x0 * g.val, ddf.val * x0 - df.val);
+        compare(x0 * g_l.val, g.val);
+        compare(
+            x0 * x0 * x0 * h3.val,
+            x0 * x0 * dddf.val - 3.0 * (x0 * ddf.val - df.val),
+        );
+        compare(
+            x0 * x0 * x0 * h52.val,
+            x0 * x0 * dddf.val - 0.5 * 5.0 * (x0 * ddf.val - df.val),
+        );
     }
 }
 
@@ -49,7 +56,7 @@ fn test_kernel_simple<K: Kernel<Num> + Copy>(kern: K) {
 }
 
 fn test_kernel_random<K: Kernel<Num> + Copy>(kern: K) {
-    use self::rand::{Rng, SeedableRng, StdRng, distributions::Uniform};
+    use self::rand::{distributions::Uniform, Rng, SeedableRng, StdRng};
 
     let seed = [3; 32];
     let mut rng = StdRng::from_seed(seed);
@@ -61,11 +68,11 @@ fn test_kernel_random<K: Kernel<Num> + Copy>(kern: K) {
 }
 
 fn ulp_compare(a: f64, b: f64) {
-    assert_ulps_eq!(a,b, max_ulps=6);
+    assert_ulps_eq!(a, b, max_ulps = 6);
 }
 
 fn rel_compare(a: f64, b: f64) {
-    assert_relative_eq!(a,b, max_relative=1e-12, epsilon=1e-14);
+    assert_relative_eq!(a, b, max_relative = 1e-12, epsilon = 1e-14);
 }
 
 #[test]
@@ -116,4 +123,3 @@ fn csrbf42_test() {
     test_kernel_simple(kern);
     test_kernel_random(kern);
 }
-
