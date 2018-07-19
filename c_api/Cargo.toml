@@ -16,5 +16,5 @@ libc = "*"
 cbindgen = { git = "https://github.com/eqrion/cbindgen.git" }
 
 [dev-dependencies]
-approx = "0.1"
+approx = "0.3"
 itertools = "0.7"

@@ -9,25 +9,47 @@ use itertools::Itertools;
 use libc::{c_double, size_t};
 use na::{Point3, Vector3};
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 #[test]
 fn test_hrbf_fit() {
     // Fit an hrbf surface to a unit box
     let pts: &[c_double] = &[
         // Corners of the box
-        0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0,
-        0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 1.0,
+        0.0, 0.0, 0.0,
+        0.0, 0.0, 1.0,
+        0.0, 1.0, 0.0,
+        0.0, 1.0, 1.0,
+        1.0, 0.0, 0.0,
+        1.0, 0.0, 1.0,
+        1.0, 1.0, 0.0,
+        1.0, 1.0, 1.0,
         // Extra vertices on box faces
-        0.5, 0.5, 0.0, 0.5, 0.5, 1.0, 0.5, 0.0, 0.5, 0.5, 1.0,
-        0.5, 0.0, 0.5, 0.5, 1.0, 0.5, 0.5,
+        0.5, 0.5, 0.0,
+        0.5, 0.5, 1.0,
+        0.5, 0.0, 0.5,
+        0.5, 1.0, 0.5,
+        0.0, 0.5, 0.5,
+        1.0, 0.5, 0.5,
     ];
 
     let a: c_double = 1.0 / c_double::sqrt(3.0);
     let nmls: &[c_double] = &[
         // Corner normals
-        -a, -a, -a, -a, -a, a, -a, a, -a, -a, a, a, a, -a, -a, a, -a, a, a,
-        a, -a, a, a, a, // Side normals
-        0.0, 0.0, -1.0, 0.0, 0.0, 1.0, 0.0, -1.0, 0.0, 0.0,
-        1.0, 0.0, -1.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+        -a, -a, -a,
+        -a, -a,  a,
+        -a,  a, -a,
+        -a,  a,  a,
+         a, -a, -a,
+         a, -a,  a,
+         a,  a, -a,
+         a,  a,  a,
+         // Side normals
+         0.0,  0.0, -1.0,
+         0.0,  0.0,  1.0,
+         0.0, -1.0,  0.0,
+         0.0,  1.0,  0.0,
+        -1.0,  0.0,  0.0,
+         1.0,  0.0,  0.0,
     ];
 
     unsafe {
