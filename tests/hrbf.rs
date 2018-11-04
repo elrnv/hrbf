@@ -17,7 +17,7 @@ fn cube() -> (Vec<Point3<f64>>, Vec<Vector3<f64>>) {
     // Fit an hrbf surface to a unit box
     let pts = vec![
         // Corners of the box
-        Point3::new(0.0f64, 0.0, 0.0),
+        Point3::new(0.0, 0.0, 0.0),
         Point3::new(0.0, 0.0, 1.0),
         Point3::new(0.0, 1.0, 0.0),
         Point3::new(0.0, 1.0, 1.0),
@@ -147,7 +147,7 @@ fn test_hrbf_fit<K: Kernel<f64> + Default>() {
     }
 }
 
-// NOTE: pow2 and pow4 kernels generate singular fit matrices whene data and sites are coincident.
+// NOTE: pow2 and pow4 kernels generate singular fit matrices when data and sites are coincident.
 // It is perhaps still possible to use these for least squares fits. The nice thing about x^2 is
 // that it's especially fast to compute so we leave it in the code for future testing.
 //

@@ -60,18 +60,18 @@ where
 /// HRBF public interface. It is not necessary to use this trait, but it allows using the HRBF as a
 /// trait object. For example this is used to pass HRBF objects between functions in the C API.
 pub trait HRBFTrait<T: Real> {
-    fn fit(&mut self, points: &Vec<Point3<T>>, normals: &Vec<Vector3<T>>) -> bool;
+    fn fit(&mut self, points: &[Point3<T>], normals: &[Vector3<T>]) -> bool;
     fn fit_offset(
         &mut self,
-        points: &Vec<Point3<T>>,
-        offsets: &Vec<T>,
-        normals: &Vec<Vector3<T>>,
+        points: &[Point3<T>],
+        offsets: &[T],
+        normals: &[Vector3<T>],
     ) -> bool;
     fn fit_system(
         &self,
-        points: &Vec<Point3<T>>,
-        potential: &Vec<T>,
-        normals: &Vec<Vector3<T>>,
+        points: &[Point3<T>],
+        potential: &[T],
+        normals: &[Vector3<T>],
     ) -> (DMatrix<T>, DVector<T>);
     fn eval(&self, p: Point3<T>) -> T;
     fn grad(&self, p: Point3<T>) -> Vector3<T>;
@@ -83,22 +83,22 @@ where
     T: Real,
     K: Kernel<T> + Default,
 {
-    fn fit(&mut self, points: &Vec<Point3<T>>, normals: &Vec<Vector3<T>>) -> bool {
+    fn fit(&mut self, points: &[Point3<T>], normals: &[Vector3<T>]) -> bool {
         HRBF::fit(self, points, normals)
     }
     fn fit_offset(
         &mut self,
-        points: &Vec<Point3<T>>,
-        offsets: &Vec<T>,
-        normals: &Vec<Vector3<T>>,
+        points: &[Point3<T>],
+        offsets: &[T],
+        normals: &[Vector3<T>],
     ) -> bool {
         HRBF::fit_offset(self, points, offsets, normals)
     }
     fn fit_system(
         &self,
-        points: &Vec<Point3<T>>,
-        potential: &Vec<T>,
-        normals: &Vec<Vector3<T>>,
+        points: &[Point3<T>],
+        potential: &[T],
+        normals: &[Vector3<T>],
     ) -> (DMatrix<T>, DVector<T>) {
         HRBF::fit_system(self, points, potential, normals)
     }
@@ -179,7 +179,7 @@ where
     /// Fit the current HRBF to the given data. Return true if successful.
     /// NOTE: Currently, points must be the same size as as sites.
     #[allow(non_snake_case)]
-    pub fn fit(&mut self, points: &Vec<Point3<T>>, normals: &Vec<Vector3<T>>) -> bool {
+    pub fn fit(&mut self, points: &[Point3<T>], normals: &[Vector3<T>]) -> bool {
         assert!(normals.len() == points.len());
         let num_sites = self.sites.len();
 
@@ -209,9 +209,9 @@ where
     #[allow(non_snake_case)]
     pub fn fit_offset(
         &mut self,
-        points: &Vec<Point3<T>>,
-        offsets: &Vec<T>,
-        normals: &Vec<Vector3<T>>,
+        points: &[Point3<T>],
+        offsets: &[T],
+        normals: &[Vector3<T>],
     ) -> bool {
         assert!(normals.len() == points.len());
         let num_sites = self.sites.len();
@@ -240,9 +240,9 @@ where
     #[allow(non_snake_case)]
     pub fn fit_system(
         &self,
-        points: &Vec<Point3<T>>,
-        potential: &Vec<T>,
-        normals: &Vec<Vector3<T>>,
+        points: &[Point3<T>],
+        potential: &[T],
+        normals: &[Vector3<T>],
     ) -> (DMatrix<T>, DVector<T>) {
         assert!(normals.len() == points.len());
         assert!(potential.len() == points.len());
