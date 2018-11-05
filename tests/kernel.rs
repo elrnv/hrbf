@@ -3,11 +3,9 @@ extern crate num_traits;
 extern crate rand;
 #[macro_use]
 extern crate approx;
+extern crate autodiff;
 
-#[allow(dead_code)]
-mod autodiff;
-
-use autodiff::{cst, Num};
+use autodiff::Num;
 use hrbf::kernel::*;
 
 const TEST_RADIUS: f64 = 2.0;
@@ -16,7 +14,7 @@ fn test_kernel<F, K: Kernel<Num>>(ker: K, x0: f64, compare: F)
 where
     F: Fn(f64, f64),
 {
-    let x = Num { val: x0, eps: 1.0 };
+    let x = Num::var(x0);
 
     let f = ker.f(x);
     let df = ker.df(x);
@@ -24,27 +22,27 @@ where
     let dddf = ker.dddf(x);
     let ddddf = ker.ddddf(x);
 
-    compare(f.eps, df.val);
-    compare(df.eps, ddf.val);
-    compare(ddf.eps, dddf.val);
-    compare(dddf.eps, ddddf.val);
+    compare(f.dx, df.x);
+    compare(df.dx, ddf.x);
+    compare(ddf.dx, dddf.x);
+    compare(dddf.dx, ddddf.x);
 
     if x0 != 0.0 {
         let df_l = ker.df_l(x);
         let g = ker.g(x);
         let g_l = ker.g_l(x);
-        let h3 = ker.h(x, cst(3.0));
-        let h52 = ker.h(x, cst(5.0 / 2.0));
-        compare(x0 * df_l.val, df.val);
-        compare(x0 * x0 * g.val, ddf.val * x0 - df.val);
-        compare(x0 * g_l.val, g.val);
+        let h3 = ker.h(x, Num::cst(3.0));
+        let h52 = ker.h(x, Num::cst(5.0 / 2.0));
+        compare(x0 * df_l.x, df.x);
+        compare(x0 * x0 * g.x, ddf.x * x0 - df.x);
+        compare(x0 * g_l.x, g.x);
         compare(
-            x0 * x0 * x0 * h3.val,
-            x0 * x0 * dddf.val - 3.0 * (x0 * ddf.val - df.val),
+            x0 * x0 * x0 * h3.x,
+            x0 * x0 * dddf.x - 3.0 * (x0 * ddf.x - df.x),
         );
         compare(
-            x0 * x0 * x0 * h52.val,
-            x0 * x0 * dddf.val - 0.5 * 5.0 * (x0 * ddf.val - df.val),
+            x0 * x0 * x0 * h52.x,
+            x0 * x0 * dddf.x - 0.5 * 5.0 * (x0 * ddf.x - df.x),
         );
     }
 }
@@ -105,21 +103,21 @@ fn pow5_test() {
 
 #[test]
 fn gauss_test() {
-    let kern = Gauss::<Num>::new(cst(TEST_RADIUS));
+    let kern = Gauss::<Num>::new(Num::cst(TEST_RADIUS));
     test_kernel_simple(kern);
     test_kernel_random(kern);
 }
 
 #[test]
 fn csrbf31_test() {
-    let kern = Csrbf31::<Num>::new(cst(TEST_RADIUS));
+    let kern = Csrbf31::<Num>::new(Num::cst(TEST_RADIUS));
     test_kernel_simple(kern);
     test_kernel_random(kern);
 }
 
 #[test]
 fn csrbf42_test() {
-    let kern = Csrbf42::<Num>::new(cst(TEST_RADIUS));
+    let kern = Csrbf42::<Num>::new(Num::cst(TEST_RADIUS));
     test_kernel_simple(kern);
     test_kernel_random(kern);
 }
