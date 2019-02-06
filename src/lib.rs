@@ -6,7 +6,7 @@ pub mod kernel;
 pub use kernel::*;
 use na::storage::Storage;
 use na::{
-    norm, DMatrix, DVector, Matrix3, Matrix3x4, Matrix4, Point3, U1, U3, U4, Vector, Vector3,
+    DMatrix, DVector, Matrix3, Matrix3x4, Matrix4, Point3, U1, U3, U4, Vector, Vector3,
     Vector4,
 };
 use num_traits::{Float, Zero};
@@ -412,7 +412,7 @@ where
     /// Helper function for `eval`.
     fn eval_block(&self, p: Point3<T>, j: usize) -> Vector4<T> {
         let x = p - self.sites[j];
-        let l = norm(&x);
+        let l = x.norm();
         let w = self.kernel[j].f(l);
         let g = self.grad_phi(x, l, j);
         Vector4::new(w, g[0], g[1], g[2])
@@ -432,7 +432,7 @@ where
     /// multiplied by the corresponding coefficients.
     fn grad_block(&self, p: Point3<T>, j: usize) -> Matrix3x4<T> {
         let x = p - self.sites[j];
-        let l = norm(&x);
+        let l = x.norm();
         let h = self.hess_phi(x, l, j);
         let mut grad = Matrix3x4::zero();
         grad.column_mut(0).copy_from(&self.grad_phi(x, l, j));
@@ -454,7 +454,7 @@ where
     #[inline]
     fn hess_block_prod(&self, p: Point3<T>, b: &Vector4<T>, j: usize) -> Matrix3<T> {
         let x = p - self.sites[j];
-        let l = norm(&x);
+        let l = x.norm();
         let b3 = b.fixed_rows::<U3>(1);
         let h = self.hess_phi(x, l, j);
         h * b[0] + self.third_deriv_prod_phi(x, l, &b3, j)
@@ -482,7 +482,7 @@ where
     /// This is [g ∇g]' = [𝜙 (∇𝜙)'; ∇𝜙 ∇(∇𝜙)'] in matlab notation.
     pub fn fit_block(&self, p: Point3<T>, j: usize) -> Matrix4<T> {
         let x = p - self.sites[j];
-        let l = norm(&x);
+        let l = x.norm();
         let w = self.kernel[j].f(l);
         let g = self.grad_phi(x, l, j);
         let h = self.hess_phi(x, l, j);
@@ -510,7 +510,7 @@ where
     /// this function returns the matrix ∇(Aⱼ(p)b)'
     pub fn grad_fit_block_prod(&self, p: Point3<T>, b: Vector4<T>, j: usize) -> Matrix3x4<T> {
         let x = p - self.sites[j];
-        let l = norm(&x);
+        let l = x.norm();
 
         let b3 = b.fixed_rows::<U3>(1);
 
@@ -533,7 +533,7 @@ where
     /// where βⱼ are taken from `self.betas`
     fn hess_fit_prod_block(&self, p: Point3<T>, c: Vector4<T>, j: usize) -> Matrix3<T> {
         let x = p - self.sites[j];
-        let l = norm(&x);
+        let l = x.norm();
 
         let c3 = c.fixed_rows::<U3>(1);
         let a = self.betas[j][0];
