@@ -8,6 +8,7 @@ extern crate approx;
 use hrbf::*;
 use nalgebra::{Matrix3, Point3, Vector3};
 use num_traits::Float;
+use rand::prelude::*;
 
 fn rel_compare(a: f64, b: f64) {
     assert_relative_eq!(a, b, max_relative = 1e-3, epsilon = 1e-11);
@@ -117,10 +118,9 @@ fn test_hrbf_derivative_simple<K: Kernel<f64> + Default>(order: usize) {
 }
 
 fn test_hrbf_derivative_random<K: Kernel<f64> + Default>(order: usize) {
-    use self::rand::{distributions::Uniform, Rng, SeedableRng, StdRng};
+    use self::rand::distributions::Uniform;
 
-    let seed = [3u8; 32];
-    let mut rng = StdRng::from_seed(seed);
+    let mut rng: StdRng = SeedableRng::from_seed([3u8; 32]);
     let range = Uniform::new(-1.0, 1.0);
     for _ in 0..99 {
         let x = Point3::new(rng.sample(range), rng.sample(range), rng.sample(range));

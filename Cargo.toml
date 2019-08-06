@@ -1,13 +1,13 @@
 [package]
 name = "hrbf"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Egor Larionov <egor.larionov@gmail.com>"]
 
 [dependencies]
 num-traits = "0.2"
-nalgebra = "0.17"
+nalgebra = "0.18"
 
 [dev-dependencies]
 approx = "0.3"
 autodiff = "0.1"
-rand = "0.5"
+rand = "0.6"
