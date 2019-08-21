@@ -2,6 +2,20 @@
 name = "hrbf"
 version = "0.2.1"
 authors = ["Egor Larionov <egor.larionov@gmail.com>"]
+license = "MPL2.0"
+description = "An implementation of Hermite Radial Basis Functions with higher order derivatives"
+readme = "README.md"
+edition = "2018"
+
+homepage = "https://gitlab.com/elrnv/hrbf"
+repository = "https://gitlab.com/elrnv/hrbf"
+documentation = "https://docs.rs/hrbf"
+
+keywords = ["hrbf", "implicit", "surface", "potential", "sdf"]
+
+[badges]
+gitlab = { repository = "elrnv/hrbf", branch = "master" }
+maintenance = { status = "passively-maintained" }
 
 [dependencies]
 num-traits = "0.2"
