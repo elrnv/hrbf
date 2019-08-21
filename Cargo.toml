@@ -2,7 +2,7 @@
 name = "hrbf"
 version = "0.2.1"
 authors = ["Egor Larionov <egor.larionov@gmail.com>"]
-license = "MPL2.0"
+license = "MPL-2.0"
 description = "An implementation of Hermite Radial Basis Functions with higher order derivatives"
 readme = "README.md"
 edition = "2018"
