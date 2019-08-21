@@ -1,9 +1,5 @@
-extern crate hrbf;
-extern crate num_traits;
-extern crate rand;
 #[macro_use]
 extern crate approx;
-extern crate autodiff;
 
 use autodiff::F;
 use hrbf::kernel::*;
@@ -54,10 +50,11 @@ fn test_kernel_simple<K: Kernel<F> + Copy>(kern: K) {
 }
 
 fn test_kernel_random<K: Kernel<F> + Copy>(kern: K) {
-    use self::rand::{distributions::Uniform, Rng, SeedableRng, StdRng};
+    use rand::distributions::Uniform;
+    use rand::prelude::*;
 
     let seed = [3; 32];
-    let mut rng = StdRng::from_seed(seed);
+    let mut rng: StdRng = SeedableRng::from_seed(seed);
     let range = Uniform::new(-1.0, 1.0);
     for _ in 0..999 {
         let x = rng.sample(range);

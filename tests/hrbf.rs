@@ -1,12 +1,8 @@
-extern crate hrbf;
-extern crate nalgebra;
-extern crate num_traits;
-extern crate rand;
 #[macro_use]
 extern crate approx;
 
 use hrbf::*;
-use nalgebra::{Matrix3, Point3, Vector3};
+use na::{Matrix3, Point3, Vector3};
 use num_traits::Float;
 use rand::prelude::*;
 
@@ -118,7 +114,7 @@ fn test_hrbf_derivative_simple<K: Kernel<f64> + Default>(order: usize) {
 }
 
 fn test_hrbf_derivative_random<K: Kernel<f64> + Default>(order: usize) {
-    use self::rand::distributions::Uniform;
+    use rand::distributions::Uniform;
 
     let mut rng: StdRng = SeedableRng::from_seed([3u8; 32]);
     let range = Uniform::new(-1.0, 1.0);

@@ -1,19 +1,16 @@
-extern crate nalgebra as na;
-extern crate num_traits;
-
 pub mod kernel;
 
 pub use kernel::*;
 use na::storage::Storage;
 use na::{
-    DMatrix, DVector, Matrix3, Matrix3x4, Matrix4, Point3, U1, U3, U4, Vector, Vector3,
-    Vector4, RealField,
+    DMatrix, DVector, Matrix3, Matrix3x4, Matrix4, Point3, RealField, Vector, Vector3, Vector4, U1,
+    U3, U4,
 };
 use num_traits::{Float, Zero};
 
 /// Floating point real trait used throughout this library.
-pub trait Real: Float + RealField + ::std::fmt::Debug {}
-impl<T> Real for T where T: Float + RealField + ::std::fmt::Debug {}
+pub trait Real: Float + RealField + std::fmt::Debug {}
+impl<T> Real for T where T: Float + RealField + std::fmt::Debug {}
 
 /// Shorthand for an HRBF with a constant `x^3` kernel.
 pub type Pow3HRBF<T> = HRBF<T, kernel::Pow3<T>>;
@@ -61,12 +58,7 @@ where
 /// trait object. For example this is used to pass HRBF objects between functions in the C API.
 pub trait HRBFTrait<T: Real> {
     fn fit(&mut self, points: &[Point3<T>], normals: &[Vector3<T>]) -> bool;
-    fn fit_offset(
-        &mut self,
-        points: &[Point3<T>],
-        offsets: &[T],
-        normals: &[Vector3<T>],
-    ) -> bool;
+    fn fit_offset(&mut self, points: &[Point3<T>], offsets: &[T], normals: &[Vector3<T>]) -> bool;
     fn fit_system(
         &self,
         points: &[Point3<T>],
@@ -86,12 +78,7 @@ where
     fn fit(&mut self, points: &[Point3<T>], normals: &[Vector3<T>]) -> bool {
         HRBF::fit(self, points, normals)
     }
-    fn fit_offset(
-        &mut self,
-        points: &[Point3<T>],
-        offsets: &[T],
-        normals: &[Vector3<T>],
-    ) -> bool {
+    fn fit_offset(&mut self, points: &[Point3<T>], offsets: &[T], normals: &[Vector3<T>]) -> bool {
         HRBF::fit_offset(self, points, offsets, normals)
     }
     fn fit_system(
