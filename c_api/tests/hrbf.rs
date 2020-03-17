@@ -1,9 +1,5 @@
-extern crate itertools;
-extern crate libc;
-extern crate nalgebra as na;
 #[macro_use]
 extern crate approx;
-extern crate chrbf;
 use chrbf::*;
 use itertools::Itertools;
 use libc::{c_double, size_t};
@@ -54,8 +50,8 @@ fn test_hrbf_fit() {
 
     unsafe {
         let n: size_t = pts.len() / 3;
-        let hrbf = HRBF_create(n, pts.as_ptr(), 0);
-        assert!(HRBF_fit(hrbf, n, pts.as_ptr(), nmls.as_ptr()));
+        let hrbf = HRBF_create_fit(n, pts.as_ptr(), nmls.as_ptr(), KernelType::HRBF_POW3);
+        assert_ne!(hrbf, std::ptr::null_mut() as *mut hrbf::Pow3Hrbf<f64>);
 
         for ((&p0, &p1, &p2), (&n0, &n1, &n2)) in pts.iter().tuples().zip(nmls.iter().tuples()) {
             let p = Point3::new(p0, p1, p2);

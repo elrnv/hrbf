@@ -14,22 +14,22 @@ fn cube() -> (Vec<Point3<f64>>, Vec<Vector3<f64>>) {
     // Fit an hrbf surface to a unit box
     let pts = vec![
         // Corners of the box
-        Point3::new(0.0, 0.0, 0.0),
-        Point3::new(0.0, 0.0, 1.0),
-        Point3::new(0.0, 1.0, 0.0),
-        Point3::new(0.0, 1.0, 1.0),
-        Point3::new(1.0, 0.0, 0.0),
-        Point3::new(1.0, 0.0, 1.0),
-        Point3::new(1.0, 1.0, 0.0),
-        Point3::new(1.0, 1.0, 1.0),
+        [0.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0],
+        [0.0, 1.0, 0.0],
+        [0.0, 1.0, 1.0],
+        [1.0, 0.0, 0.0],
+        [1.0, 0.0, 1.0],
+        [1.0, 1.0, 0.0],
+        [1.0, 1.0, 1.0],
         // Extra vertices on box faces
-        Point3::new(0.5, 0.5, 0.0),
-        Point3::new(0.5, 0.5, 1.0),
-        Point3::new(0.5, 0.0, 0.5),
-        Point3::new(0.5, 1.0, 0.5),
-        Point3::new(0.0, 0.5, 0.5),
-        Point3::new(1.0, 0.5, 0.5),
-    ];
+        [0.5, 0.5, 0.0],
+        [0.5, 0.5, 1.0],
+        [0.5, 0.0, 0.5],
+        [0.5, 1.0, 0.5],
+        [0.0, 0.5, 0.5],
+        [1.0, 0.5, 0.5],
+    ].into_iter().map(Point3::from).collect();
 
     let a = 1.0f64 / 3.0.sqrt();
     let nmls = vec![
@@ -55,14 +55,13 @@ fn cube() -> (Vec<Point3<f64>>, Vec<Vector3<f64>>) {
 }
 
 /// Finite difference test
-fn test_derivative_fd<F, K: Kernel<f64> + Default>(x: Point3<f64>, compare: F, order: usize)
+fn test_derivative_fd<F, K: Kernel<f64> + Clone + Default>(x: Point3<f64>, compare: F, order: usize)
 where
     F: Fn(f64, f64),
 {
     let (pts, nmls) = cube();
 
-    let mut hrbf = HRBF::<f64, K>::new(pts.clone());
-    assert!(hrbf.fit(&pts, &nmls));
+    let hrbf = HrbfBuilder::<_, K>::new(pts.clone()).normals(nmls).build().unwrap();
 
     // We will test hrbf derivatives using central differencing away from zeros since autodiff
     // fails in these scenarios because it can't simplify expressions with division by zero.
@@ -100,7 +99,7 @@ where
     }
 }
 
-fn test_hrbf_derivative_simple<K: Kernel<f64> + Default>(order: usize) {
+fn test_hrbf_derivative_simple<K: Kernel<f64> + Clone + Default>(order: usize) {
     let test_pts = [
         Point3::new(0.5, 1.0, 0.5),
         Point3::new(0.1, 0.0, 0.0),
@@ -113,7 +112,7 @@ fn test_hrbf_derivative_simple<K: Kernel<f64> + Default>(order: usize) {
     }
 }
 
-fn test_hrbf_derivative_random<K: Kernel<f64> + Default>(order: usize) {
+fn test_hrbf_derivative_random<K: Kernel<f64> + Clone + Default>(order: usize) {
     use rand::distributions::Uniform;
 
     let mut rng: StdRng = SeedableRng::from_seed([3u8; 32]);
@@ -124,11 +123,10 @@ fn test_hrbf_derivative_random<K: Kernel<f64> + Default>(order: usize) {
     }
 }
 
-fn test_hrbf_fit<K: Kernel<f64> + Default>() {
+fn test_hrbf_fit<K: Kernel<f64> + Clone + Default>() {
     let (pts, nmls) = cube();
 
-    let mut hrbf = HRBF::<f64, K>::new(pts.clone());
-    assert!(hrbf.fit(&pts, &nmls));
+    let hrbf = HrbfBuilder::<_, K>::new(pts.clone()).normals(nmls.clone()).build().unwrap();
 
     for (p, n) in pts.into_iter().zip(nmls) {
         let p_u = p + 0.001 * n;

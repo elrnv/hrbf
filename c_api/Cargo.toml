@@ -1,7 +1,8 @@
 [package]
 name = "chrbf"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Egor Larionov <egor.larionov@gmail.com>"]
+edition = "2018"
 
 [lib]
 name = "chrbf"
@@ -9,7 +10,7 @@ crate-type = ["cdylib", "rlib"] # rlib is needed for testing
 
 [dependencies]
 hrbf = { path = "../." }
-nalgebra = "*"
+na = { package = "nalgebra", version = "*" }
 libc = "*"
 
 [build-dependencies]

@@ -1,30 +1,39 @@
-//! Hermite radial basis function kernels (funcions φ)
-//! We require that the first derivative of the kernel f go to zero as x -> 0.
-//! This ensures that the hrbf fitting matrix is well defined.
-//! I.e. in its taylor series representation, f(x) = ∑ᵢ aᵢxⁱ, we require that a₁ = 0.
+//! Hermite radial basis function kernels (funcions `φ`)
+//! We require that the first derivative of the kernel `f` go to zero as `x -> 0`.
+//! This ensures that the HRBF fitting matrix is well defined.
+//! I.e. in its taylor series representation, `f(x) = ∑ᵢ aᵢxⁱ`, we require that `a₁ = 0`.
 //!
-//! NOTE: Kernels like x^2, x^3, gauss, and (1-x)^4 (4x+1) all satisfy this criterion.
+//! NOTE: Kernels like `x^2`, `x^3`, `exp(-x*x)`, and `(1-x)^4 (4x+1)` all satisfy this criterion.
 //!
 //! To ensure that derivativevs at zero are computed accurately, each kernel must provide a formula
 //! for the following additional function:
+//!
+//! ```verbatim
 //!   df_l(x) = φʹ(x)/x
-//! where φ is the kernel function. It must be that df(x), ddf(x) - df_l(x) -> 0 as x -> 0 for the HRBF
+//! ```
+//! where `φ` is the kernel function. It must be that `df(x)`, `ddf(x) - df_l(x) -> 0` as `x -> 0`
+//! for the HRBF
 //! derivaitves to exist.
 //!
 //!
 //! Furthermore, if the HRBF is to be used in the optimization framework,
 //! where a 3rd or even 4th derivatives are required, we also need the 3rd derivative to vanish.
-//! I.e. in its taylor series representation, f(x) = ∑ᵢ aᵢxⁱ, we require that a₁ = a₃ = 0.
+//! I.e. in its taylor series representation, `f(x) = ∑ᵢ aᵢxⁱ`, we require that `a₁ = a₃ = 0`.
 //!
-//! NOTE: The gauss and x^2 kernels satisfy this criteria, but x^3, x^2*log(x) and (1-x)^4 (4x+1) do not!
+//! NOTE: The `exp(-x*x)` and `x^2` kernels satisfy this criteria, but `x^3, x^2*log(x)` and
+//! `(1-x)^4 (4x+1)` do not!
 //!
 //! To ensure that derivatives at zero are computed accurately, each kernel must provide a formula for
-//! the function df_l (as described above) and the following additional functions:
+//! the function `df_l` (as described above) and the following additional functions:
+//!
+//! ```verbatim
 //!   g(x) = φʺ(x)/x - φʹ(x)/x^2
 //!   g_l(x) = φʺ(x)/x^2 - φʹ(x)/x^3
 //!   h(x,a) = φ‴(x)/x - a(φʺ(x)/x^2 - φʹ(x)/x^3)
+//! ```
+//!
 //! to see how these are used, see mesh_implicit_surface.cpp
-//! It must be that g(x), h(x,3) -> 0 as x -> 0 for the HRBF derivatives to exist.
+//! It must be that `g(x), h(x,3) -> 0` as `x -> 0` for the HRBF derivatives to exist.
 
 use num_traits::Float;
 use std::marker::PhantomData;
@@ -34,36 +43,36 @@ pub trait Kernel<T>
 where
     T: Float,
 {
-    /// Main kernel function φ(x)
+    /// Main kernel function `φ(x)`
     fn f(&self, x: T) -> T;
-    /// The first derivative φʹ(x)
+    /// The first derivative `φʹ(x)`
     fn df(&self, x: T) -> T;
-    /// The second derivative φʺ(x)
+    /// The second derivative `φʺ(x)`
     fn ddf(&self, x: T) -> T;
-    /// The third derivative of φ(x)
+    /// The third derivative of `φ(x)`
     fn dddf(&self, x: T) -> T;
-    /// The fourth derivative of φ(x)
+    /// The fourth derivative of `φ(x)`
     fn ddddf(&self, x: T) -> T;
 
-    /// Additional function to ensure proper derivatives at x = 0.
-    /// equivalent to df(x)/x for x != 0.
-    /// This function should be well defined at all values of x.
+    /// Additional function to ensure proper derivatives at `x = 0`.
+    /// equivalent to `df(x)/x` for `x != 0`.
+    /// This function should be well defined at all values of `x`.
     fn df_l(&self, x: T) -> T;
 
-    /// Need the following functions for third and fourth hrbf derivaitves
+    /// Need the following functions for third and fourth HRBF derivaitves
     ///
-    /// Additional function to ensure proper derivatives at x = 0.
-    /// equivalent to ddf(x)/x - df(x)/(x*x) for x != 0.
-    /// This function should go to zero as x goes to zero.
+    /// Additional function to ensure proper derivatives at `x = 0`.
+    /// equivalent to `ddf(x)/x - df(x)/(x*x)` for `x != 0`.
+    /// This function should go to zero as `x` goes to zero.
     fn g(&self, x: T) -> T;
 
-    /// Additional function to ensure proper derivatives at x = 0.
-    /// equivalent to ddf(x)/(x*x) - df(x)/(x*x*x) for x != 0.
-    /// This function should be well defined at all values of x.
+    /// Additional function to ensure proper derivatives at `x = 0`.
+    /// equivalent to `ddf(x)/(x*x) - df(x)/(x*x*x)` for `x != 0`.
+    /// This function should be well defined at all values of `x`.
     fn g_l(&self, x: T) -> T;
 
-    /// Additional function to ensure proper derivatives at x = 0.
-    /// equivalent to dddf(x)/x - a*(ddf(x)/(x*x) - df(x)/(x*x*x)) for x != 0.
+    /// Additional function to ensure proper derivatives at `x = 0`.
+    /// equivalent to `dddf(x)/x - a*(ddf(x)/(x*x) - df(x)/(x*x*x))` for `x != 0`.
     /// This function should go to zero as x goes to zero.
     fn h(&self, x: T, a: T) -> T;
 }
@@ -73,14 +82,17 @@ pub trait LocalKernel<T>
 where
     T: Float,
 {
+    /// Construct a new local kernel with a radius `r`.
     fn new(r: T) -> Self;
 }
 
 /// Global kernel trait defines a constructor for kernels without a radial fallofff.
 pub trait GlobalKernel {
+    /// Construct a new global kernel.
     fn new() -> Self;
 }
 
+/// The `x^2` kernel.
 #[derive(Copy, Clone)]
 pub struct Pow2<T>(PhantomData<T>);
 
@@ -127,6 +139,7 @@ impl<T: Float> Kernel<T> for Pow2<T> {
     }
 }
 
+/// The `x^3` kernel.
 #[derive(Copy, Clone)]
 pub struct Pow3<T>(::std::marker::PhantomData<T>);
 
@@ -179,6 +192,7 @@ impl<T: Float> Kernel<T> for Pow3<T> {
     }
 }
 
+/// The `x^4` kernel.
 #[derive(Copy, Clone)]
 pub struct Pow4<T>(::std::marker::PhantomData<T>);
 
@@ -225,7 +239,7 @@ impl<T: Float> Kernel<T> for Pow4<T> {
     }
 }
 
-/// x^5 kernel.
+/// The `x^5` kernel.
 #[derive(Copy, Clone)]
 pub struct Pow5<T>(::std::marker::PhantomData<T>);
 
@@ -272,7 +286,7 @@ impl<T: Float> Kernel<T> for Pow5<T> {
     }
 }
 
-/// Gaussian kernel.
+/// Gaussian `exp(-x*x)` kernel.
 #[derive(Copy, Clone)]
 pub struct Gauss<T> {
     r: T,
@@ -337,8 +351,10 @@ impl<T: Float> Kernel<T> for Gauss<T> {
     }
 }
 
-/// Quintic kernel. Generates a positive definite hrbf fitting matrix.
-/// Third and fourth order hrbf derivatives don't exist at x = 0.
+/// Quintic kernel `(1-x)^4 (4x+1)`.
+///
+/// Generates a positive definite HRBF fitting matrix.
+/// Third and fourth order HRBF derivatives don't exist at `x = 0`.
 #[derive(Copy, Clone)]
 pub struct Csrbf31<T> {
     r: T,
@@ -460,6 +476,9 @@ impl<T: Float> Kernel<T> for Csrbf31<T> {
     }
 }
 
+/// The `(1-x)^6 (35x^2 + 18x + 3)` kernel.
+///
+/// This is a higher order version of the `Csrbf31` kernel with similar properties.
 #[derive(Copy, Clone)]
 pub struct Csrbf42<T> {
     r: T,
