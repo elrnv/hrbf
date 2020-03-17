@@ -5,6 +5,7 @@ An implementation of Hermite Radial Basis Functions and their derivatives up to 
 [![On crates.io](https://img.shields.io/crates/v/hrbf.svg)](https://crates.io/crates/hrbf)
 [![On docs.rs](https://docs.rs/hrbf/badge.svg)](https://docs.rs/hrbf/)
 [![Build status](https://gitlab.com/elrnv/hrbf/badges/master/pipeline.svg)](https://gitlab.com/elrnv/hrbf/pipelines/)
+![Test Coverage](https://gitlab.com/elrnv/hrbf/badges/master/coverage.svg)
 
 
 # Related Publications
