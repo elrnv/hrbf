@@ -6,7 +6,7 @@ rust-latest:
   image: rust:latest
   before_script:
     - apt-get update --yes
-    - apt-get install -y libcurl4-openssl-dev libelf-dev libdw-dev cmake gcc binutils-dev kcov
+    - apt-get install -y libcurl4-openssl-dev libelf-dev libdw-dev cmake gcc binutils-dev
     - cargo install --debug cargo-make
   script:
     - cargo build --verbose
@@ -18,7 +18,7 @@ rust-nightly:
   image: rustlang/rust:nightly
   before_script:
     - apt-get update --yes
-    - apt-get install -y libcurl4-openssl-dev libelf-dev libdw-dev cmake gcc binutils-dev kcov
+    - apt-get install -y libcurl4-openssl-dev libelf-dev libdw-dev cmake gcc binutils-dev
     - cargo install --debug cargo-make
   script:
     - cargo build --verbose
