@@ -4,20 +4,24 @@ stages:
 rust-latest:
   stage: build
   image: rust:latest
-  script:
+  before_script:
     - cargo install --debug cargo-make
-    - cargo make ci-flow
+    - cargo make coverage
+  script:
     - cargo build --verbose
     - cargo test --verbose
+    - cargo make ci-flow
 
 rust-nightly:
   stage: build
   image: rustlang/rust:nightly
-  script:
+  before_script:
     - cargo install --debug cargo-make
-    - cargo make ci-flow
+    - cargo make coverage
+  script:
     - cargo build --verbose
     - cargo test --verbose
+    - cargo make ci-flow
   allow_failure: true
 
 variables:
