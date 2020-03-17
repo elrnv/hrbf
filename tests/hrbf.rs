@@ -29,7 +29,10 @@ fn cube() -> (Vec<Point3<f64>>, Vec<Vector3<f64>>) {
         [0.5, 1.0, 0.5],
         [0.0, 0.5, 0.5],
         [1.0, 0.5, 0.5],
-    ].into_iter().map(Point3::from).collect();
+    ]
+    .into_iter()
+    .map(Point3::from)
+    .collect();
 
     let a = 1.0f64 / 3.0.sqrt();
     let nmls = vec![
@@ -61,7 +64,10 @@ where
 {
     let (pts, nmls) = cube();
 
-    let hrbf = HrbfBuilder::<_, K>::new(pts.clone()).normals(nmls).build().unwrap();
+    let hrbf = HrbfBuilder::<_, K>::new(pts.clone())
+        .normals(nmls)
+        .build()
+        .unwrap();
 
     // We will test hrbf derivatives using central differencing away from zeros since autodiff
     // fails in these scenarios because it can't simplify expressions with division by zero.
@@ -126,7 +132,10 @@ fn test_hrbf_derivative_random<K: Kernel<f64> + Clone + Default>(order: usize) {
 fn test_hrbf_fit<K: Kernel<f64> + Clone + Default>() {
     let (pts, nmls) = cube();
 
-    let hrbf = HrbfBuilder::<_, K>::new(pts.clone()).normals(nmls.clone()).build().unwrap();
+    let hrbf = HrbfBuilder::<_, K>::new(pts.clone())
+        .normals(nmls.clone())
+        .build()
+        .unwrap();
 
     for (p, n) in pts.into_iter().zip(nmls) {
         let p_u = p + 0.001 * n;

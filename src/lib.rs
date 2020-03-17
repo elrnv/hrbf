@@ -1,6 +1,6 @@
 #![warn(missing_docs)]
 
-//! 
+//!
 //! An implementation of Hermite Radial Basis Functions with higher order derivatives.
 //!
 //! # Overview
@@ -123,7 +123,7 @@
 //!
 //! [I. Macêdo, J. P. Gois, and L. Velho, "*Hermite Radial Basis Function
 //! Implicits*"](https://doi.org/10.1111/j.1467-8659.2010.01785.x)
-//! 
+//!
 //! [R. Vaillant, L. Barthe, G. Guennebaud, M.-P. Cani, D. Rhomer, B. Wyvill, O. Gourmel, and M.
 //! Paulin, "*Implicit Skinning: Real-Time Skin Deformation with Contact
 //! Modeling*"](http://rodolphe-vaillant.fr/pivotx/templates/projects/implicit_skinning/implicit_skinning.pdf)
@@ -164,7 +164,6 @@ pub type Csrbf31HrbfBuilder<T> = HrbfBuilder<T, kernel::Csrbf31<T>>;
 /// Shorthand for an HRBF builder with a CSRBF(4,1) `(1-x)^6 (35x^2 + 18x + 3)` kernel of type.
 pub type Csrbf42HrbfBuilder<T> = HrbfBuilder<T, kernel::Csrbf42<T>>;
 
-
 /// Error indicating that the building the HRBF potential failed.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Error {
@@ -185,10 +184,11 @@ impl std::fmt::Display for Error {
             Error::NumOffsetsMismatch => "Number of offsets does not match the number of sites",
             Error::NumNormalsMismatch => "Number of normals does not match the number of sites",
             Error::LinearSolveFailure => "Linear solve failed when building the HRBF potential",
-        }.fmt(f)
+        }
+        .fmt(f)
     }
 }
-impl std::error::Error for Error { }
+impl std::error::Error for Error {}
 
 /// A Result with a custom Error type encapsulating all possible failures in this crate.
 pub type Result<T> = std::result::Result<T, Error>;
@@ -201,7 +201,7 @@ pub enum KernelType<K> {
     /// Each site has its own kernel, although all kernels must have the same type.
     Variable(Vec<K>),
     /// Same kernel for all sites.
-    Constant(K),      
+    Constant(K),
 }
 
 impl<K> ::std::ops::Index<usize> for KernelType<K> {
@@ -214,7 +214,6 @@ impl<K> ::std::ops::Index<usize> for KernelType<K> {
         }
     }
 }
-
 
 /// A builder for an HRBF potential.
 ///
@@ -236,7 +235,7 @@ where
 impl<T, K> HrbfBuilder<T, K>
 where
     T: Real,
-    K: Kernel<T> + Clone + Default
+    K: Kernel<T> + Clone + Default,
 {
     /// Construct an HRBF builder with a set of `sites`.
     ///
@@ -317,7 +316,12 @@ where
     /// 3x4 matrix returned by `grad_block`. This function is more efficient than
     /// evaluating `eval_block` and `grad_block`.
     /// This is `[g ∇g]' = [𝜙 (∇𝜙)'; ∇𝜙 ∇(∇𝜙)']` in MATLAB notation.
-    pub(crate) fn fit_block(sites: &[Point3<T>], kernel: &KernelType<K>, p: Point3<T>, j: usize) -> Matrix4<T> {
+    pub(crate) fn fit_block(
+        sites: &[Point3<T>],
+        kernel: &KernelType<K>,
+        p: Point3<T>,
+        j: usize,
+    ) -> Matrix4<T> {
         let x = p - sites[j];
         let l = x.norm();
         let w = kernel[j].f(l);
@@ -345,7 +349,13 @@ where
 
     /// Build the linear system given all the needed data.
     #[allow(non_snake_case)]
-    pub(crate) fn fit_system(sites: &[Point3<T>], points: &[Point3<T>], offsets: &[T], normals: &[Vector3<T>], kernel: &KernelType<K>) -> (DMatrix<T>, DVector<T>) {
+    pub(crate) fn fit_system(
+        sites: &[Point3<T>],
+        points: &[Point3<T>],
+        offsets: &[T],
+        normals: &[Vector3<T>],
+        kernel: &KernelType<K>,
+    ) -> (DMatrix<T>, DVector<T>) {
         let num_sites = sites.len();
         debug_assert_eq!(points.len(), num_sites);
         debug_assert_eq!(normals.len(), num_sites);
@@ -404,7 +414,9 @@ where
             return Err(Error::NumNormalsMismatch);
         }
 
-        Ok(Self::fit_system(&sites, &points, &offsets, &normals, &kernel))
+        Ok(Self::fit_system(
+            &sites, &points, &offsets, &normals, &kernel,
+        ))
     }
 
     /// A non-consuming builder.
@@ -447,9 +459,8 @@ where
 impl<T, K> HrbfBuilder<T, K>
 where
     T: Real,
-    K: Kernel<T> + LocalKernel<T>
+    K: Kernel<T> + LocalKernel<T>,
 {
-
     /// Set the kernel radius to be `radius` for all sites.
     ///
     /// Note that this parameter is only valid for local kernel types like `Csrbf31`, `Csrbf42` and
@@ -524,7 +535,11 @@ where
     /// Return a mutable reference to `Self` if successful.
     /// NOTE: Currently, points must be the same size as sites.
     #[allow(non_snake_case)]
-    pub fn fit_to_points(&mut self, points: &[Point3<T>], normals: &[Vector3<T>]) -> Result<&mut Self> {
+    pub fn fit_to_points(
+        &mut self,
+        points: &[Point3<T>],
+        normals: &[Vector3<T>],
+    ) -> Result<&mut Self> {
         self.fit_impl(points.into(), None, normals)
     }
 
@@ -535,11 +550,7 @@ where
     /// and has a gradient equal to `normals`.
     /// Return a mutable reference to `Self` if successful.
     #[allow(non_snake_case)]
-    pub fn offset_fit(
-        &mut self,
-        offsets: &[T],
-        normals: &[Vector3<T>],
-    ) -> Result<&mut Self> {
+    pub fn offset_fit(&mut self, offsets: &[T], normals: &[Vector3<T>]) -> Result<&mut Self> {
         self.fit_impl(None, offsets.into(), normals)
     }
 
@@ -568,13 +579,10 @@ where
         points: Option<&[Point3<T>]>,
         offsets: Option<&[T]>,
         normals: &[Vector3<T>],
-        ) -> Result<&mut Self> {
-
+    ) -> Result<&mut Self> {
         let num_sites = self.sites.len();
 
-        let points = points.unwrap_or_else(|| {
-            self.sites.as_slice()
-        });
+        let points = points.unwrap_or_else(|| self.sites.as_slice());
 
         if points.len() != num_sites {
             return Err(Error::NumPointsMismatch);
@@ -594,7 +602,13 @@ where
             return Err(Error::NumOffsetsMismatch);
         }
 
-        let (A, b) = HrbfBuilder::fit_system(self.sites.as_slice(), points, offsets, normals, &self.kernel);
+        let (A, b) = HrbfBuilder::fit_system(
+            self.sites.as_slice(),
+            points,
+            offsets,
+            normals,
+            &self.kernel,
+        );
 
         self.betas.clear();
         if let Some(x) = A.lu().solve(&b) {
@@ -784,7 +798,8 @@ where
         let l = x.norm();
         let h = Self::hess_phi(&self.kernel, x, l, j);
         let mut grad = Matrix3x4::zero();
-        grad.column_mut(0).copy_from(&Self::grad_phi(&self.kernel, x, l, j));
+        grad.column_mut(0)
+            .copy_from(&Self::grad_phi(&self.kernel, x, l, j));
         grad.fixed_columns_mut::<U3>(1).copy_from(&h);
         grad
     }
