@@ -2,6 +2,10 @@
 
 An implementation of Hermite Radial Basis Functions and their derivatives up to second order.
 
+[![On crates.io](https://img.shields.io/crates/v/hrbf.svg)](https://crates.io/crates/hrbf)
+[![On docs.rs](https://docs.rs/hrbf/badge.svg)](https://docs.rs/hrbf/)
+[![Build status](https://travis-ci.org/elrnv/hrbf.svg?branch=master)](https://travis-ci.org/elrnv/hrbf)
+
 
 # Related Publications
 
