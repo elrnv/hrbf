@@ -1,6 +1,11 @@
 stages:
   - build
 
+test:cargo:
+  script:
+    - cargo install --debug cargo-make
+    - cargo make ci-flow
+
 rust-latest:
   stage: build
   image: rust:latest
@@ -15,11 +20,6 @@ rust-nightly:
     - cargo build --verbose
     - cargo test --verbose
   allow_failure: true
-
-test:cargo:
-    script:
-        - cargo install --debug cargo-make
-        - cargo make ci-flow
 
 variables:
   CARGO_MAKE_RUN_CODECOV: "true"
