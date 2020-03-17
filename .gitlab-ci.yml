@@ -5,6 +5,7 @@ rust-latest:
   stage: build
   image: rust:latest
   before_script:
+    - apt-get update --yes
     - apt-get install -y libcurl4-openssl-dev libelf-dev libdw-dev cmake gcc binutils-dev kcov
     - cargo install --debug cargo-make
   script:
@@ -16,6 +17,7 @@ rust-nightly:
   stage: build
   image: rustlang/rust:nightly
   before_script:
+    - apt-get update --yes
     - apt-get install -y libcurl4-openssl-dev libelf-dev libdw-dev cmake gcc binutils-dev kcov
     - cargo install --debug cargo-make
   script:
