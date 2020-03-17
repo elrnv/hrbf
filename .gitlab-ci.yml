@@ -1,15 +1,12 @@
 stages:
   - build
 
-test:cargo:
-  script:
-    - cargo install --debug cargo-make
-    - cargo make ci-flow
-
 rust-latest:
   stage: build
   image: rust:latest
   script:
+    - cargo install --debug cargo-make
+    - cargo make ci-flow
     - cargo build --verbose
     - cargo test --verbose
 
@@ -17,6 +14,8 @@ rust-nightly:
   stage: build
   image: rustlang/rust:nightly
   script:
+    - cargo install --debug cargo-make
+    - cargo make ci-flow
     - cargo build --verbose
     - cargo test --verbose
   allow_failure: true
