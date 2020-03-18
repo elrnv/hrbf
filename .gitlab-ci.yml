@@ -1,14 +1,6 @@
 stages:
-  - coverage
   - test
-
-coverage:
-  stage: coverage
-  image: elrnv/rust-kcov:rust-1.42.0
-  before_script:
-    - cargo install --debug cargo-make
-  script:
-    - cargo make ci-flow
+  - coverage
 
 rust-latest:
   stage: test
@@ -24,6 +16,14 @@ rust-nightly:
     - cargo build --verbose
     - cargo test --verbose
   allow_failure: true
+
+coverage:
+  stage: coverage
+  image: elrnv/rust-kcov:rust-1.42.0
+  before_script:
+    - cargo install --debug cargo-make
+  script:
+    - cargo make ci-flow
 
 variables:
   CARGO_MAKE_RUN_CODECOV: "true"
