@@ -1,29 +1,28 @@
 stages:
-  - build
+  - coverage
+  - test
+
+coverage:
+  stage: coverage
+  image: elrnv/rust-kcov:rust-1.42.0
+  before_script:
+    - cargo install --debug cargo-make
+  script:
+    - cargo make ci-flow
 
 rust-latest:
-  stage: build
+  stage: test
   image: rust:latest
-  before_script:
-    - apt-get update --yes
-    - apt-get install -y libcurl4-openssl-dev libelf-dev libdw-dev cmake gcc binutils-dev
-    - cargo install --debug cargo-make
   script:
     - cargo build --verbose
     - cargo test --verbose
-    - cargo make ci-flow
 
 rust-nightly:
-  stage: build
+  stage: test
   image: rustlang/rust:nightly
-  before_script:
-    - apt-get update --yes
-    - apt-get install -y libcurl4-openssl-dev libelf-dev libdw-dev cmake gcc binutils-dev
-    - cargo install --debug cargo-make
   script:
     - cargo build --verbose
     - cargo test --verbose
-    - cargo make ci-flow
   allow_failure: true
 
 variables:
