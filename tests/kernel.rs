@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate approx;
 
-use autodiff::F;
+use autodiff::F1 as F;
 use hrbf::kernel::*;
 
 const TEST_RADIUS: f64 = 2.0;

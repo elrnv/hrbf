@@ -1,6 +1,6 @@
 [package]
 name = "hrbf"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Egor Larionov <egor.larionov@gmail.com>"]
 license = "MPL-2.0"
 description = "An implementation of Hermite Radial Basis Functions with higher order derivatives"
@@ -19,9 +19,9 @@ maintenance = { status = "passively-maintained" }
 
 [dependencies]
 num-traits = "0.2"
-na = { package = "nalgebra", version = "0.20" }
+na = { package = "nalgebra", version = "0.24" }
 
 [dev-dependencies]
 approx = "0.3"
-autodiff = "0.1"
-rand = "0.7"
+autodiff = "0.3"
+rand = "0.8"
