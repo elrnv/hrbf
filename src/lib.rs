@@ -134,7 +134,7 @@ pub use kernel::*;
 use na::storage::Storage;
 use na::{
     DMatrix, DVector, Matrix3, Matrix3x4, Matrix4, Point3, RealField, Vector, Vector3, Vector4, U1,
-    U3, U4,
+    U3,
 };
 use num_traits::{Float, Zero};
 
@@ -370,9 +370,9 @@ where
             } else {
                 offsets[i]
             };
-            b.fixed_rows_mut::<U3>(4 * i + 1).copy_from(&normals[i]);
+            b.fixed_rows_mut::<3>(4 * i + 1).copy_from(&normals[i]);
             for j in 0..num_sites {
-                A.fixed_slice_mut::<U4, U4>(4 * i, 4 * j)
+                A.fixed_slice_mut::<4, 4>(4 * i, 4 * j)
                     .copy_from(&Self::fit_block(sites, &kernel, *p, j));
             }
         }
@@ -616,7 +616,7 @@ where
 
             self.betas.resize(num_sites, Vector4::zero());
             for j in 0..num_sites {
-                self.betas[j].copy_from(&x.fixed_rows::<U4>(4 * j));
+                self.betas[j].copy_from(&x.fixed_rows::<4>(4 * j));
             }
 
             Ok(self)
@@ -800,7 +800,7 @@ where
         let mut grad = Matrix3x4::zero();
         grad.column_mut(0)
             .copy_from(&Self::grad_phi(&self.kernel, x, l, j));
-        grad.fixed_columns_mut::<U3>(1).copy_from(&h);
+        grad.fixed_columns_mut::<3>(1).copy_from(&h);
         grad
     }
 
@@ -819,7 +819,7 @@ where
     fn hess_block_prod(&self, p: Point3<T>, b: &Vector4<T>, j: usize) -> Matrix3<T> {
         let x = p - self.sites[j];
         let l = x.norm();
-        let b3 = b.fixed_rows::<U3>(1);
+        let b3 = b.fixed_rows::<3>(1);
         let h = Self::hess_phi(&self.kernel, x, l, j);
         h * b[0] + self.third_deriv_prod_phi(x, l, &b3, j)
     }
@@ -857,7 +857,7 @@ where
         let x = p - self.sites[j];
         let l = x.norm();
 
-        let b3 = b.fixed_rows::<U3>(1);
+        let b3 = b.fixed_rows::<3>(1);
 
         let g = Self::grad_phi(&self.kernel, x, l, j);
         let h = Self::hess_phi(&self.kernel, x, l, j);
@@ -866,7 +866,7 @@ where
 
         let mut grad = Matrix3x4::zero();
         grad.column_mut(0).copy_from(&(g * b[0] + h * b3));
-        grad.fixed_columns_mut::<U3>(1).copy_from(&third);
+        grad.fixed_columns_mut::<3>(1).copy_from(&third);
         grad
     }
 
@@ -882,9 +882,9 @@ where
         let x = p - self.sites[j];
         let l = x.norm();
 
-        let c3 = c.fixed_rows::<U3>(1);
+        let c3 = c.fixed_rows::<3>(1);
         let a = self.betas[j][0];
-        let b = self.betas[j].fixed_rows::<U3>(1);
+        let b = self.betas[j].fixed_rows::<3>(1);
 
         // Compute in blocks
         Self::hess_phi(&self.kernel, x, l, j) * c[0] * a
