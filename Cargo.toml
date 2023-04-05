@@ -19,9 +19,9 @@ maintenance = { status = "passively-maintained" }
 
 [dependencies]
 num-traits = "0.2"
-na = { package = "nalgebra", version = "0.30" }
+na = { package = "nalgebra", version = "0.32" }
 
 [dev-dependencies]
 approx = "0.5"
-autodiff = "0.4"
+autodiff = "0.7"
 rand = "0.8"

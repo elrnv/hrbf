@@ -372,7 +372,7 @@ where
             };
             b.fixed_rows_mut::<3>(4 * i + 1).copy_from(&normals[i]);
             for j in 0..num_sites {
-                A.fixed_slice_mut::<4, 4>(4 * i, 4 * j)
+                A.fixed_view_mut::<4, 4>(4 * i, 4 * j)
                     .copy_from(&Self::fit_block(sites, &kernel, *p, j));
             }
         }
